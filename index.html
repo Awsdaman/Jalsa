@@ -44,17 +44,16 @@ body::before {
 }
 
 /* === SCREENS === */
-.screen { display: none; position: relative; z-index: 1; min-height: 100vh; }
-.screen.active { display: block; }
+.screen { display: none !important; position: relative; z-index: 1; min-height: 100vh; }
+.screen.active { display: block !important; }
 
 /* === SPLASH === */
-#splash {
-  display: flex; flex-direction: column;
+#splash.active {
+  display: flex !important; flex-direction: column;
   align-items: center; justify-content: center;
   text-align: center; padding: 40px 30px;
   min-height: 100vh;
 }
-#splash.active { display: flex; }
 .splash-glow {
   position: absolute;
   width: 400px; height: 400px;
@@ -155,8 +154,7 @@ body::before {
 }
 
 /* === GAME SCREEN === */
-#game { display: flex; flex-direction: column; }
-#game.active { display: flex; }
+#game.active { display: flex !important; flex-direction: column; }
 .game-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 18px;
@@ -364,8 +362,7 @@ body::before {
 }
 
 /* === END SCREEN === */
-#end-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px; min-height: 100vh; }
-#end-screen.active { display: flex; }
+#end-screen.active { display: flex !important; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px; min-height: 100vh; }
 .end-trophy { font-size: 5rem; margin-bottom: 16px; animation: bounce 1s infinite alternate; }
 @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 .end-title { font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 2.2rem; margin-bottom: 8px; }
