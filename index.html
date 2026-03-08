@@ -573,45 +573,68 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
 /* === BOARD SCREEN === */
 #board.active { display: flex !important; flex-direction: column; min-height: 100vh; }
 .board-wrap { flex: 1; overflow: auto; padding: 10px 8px 20px; }
-.board-grid { display: grid; gap: 5px; }
-.board-header-cell {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 8px 4px;
-  text-align: center; font-family: 'Cairo', sans-serif;
-  font-weight: 700; font-size: 0.68rem; color: var(--text);
-  line-height: 1.3; min-height: 56px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  word-break: break-word;
+
+/* Horizontal Jeopardy layout:
+   [600] [400] [200] [CATEGORY] [200] [400] [600]
+   Each ROW = one category. 7 columns total. */
+.board-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.1fr 2.8fr 1.1fr 1fr 1fr;
+  gap: 6px;
+  min-width: 380px;
 }
-.board-header-cell .bh-emoji { font-size: 1.3rem; }
+
+/* Center category cell */
+.board-cat-cell {
+  background: var(--surface2);
+  border: 2px solid var(--cat-color, var(--border));
+  border-radius: 12px; padding: 10px 8px;
+  text-align: center; font-family: 'Cairo', sans-serif;
+  font-weight: 700; font-size: 0.8rem; color: var(--text);
+  line-height: 1.35; min-height: 68px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  box-shadow: 0 0 18px rgba(0,0,0,0.4);
+}
+.board-cat-cell .bh-emoji { font-size: 1.4rem; line-height: 1; }
+
+/* Question cells */
 .board-cell {
-  background: var(--surface); border: 2px solid var(--border);
   border-radius: 10px; cursor: pointer; transition: all 0.15s;
-  aspect-ratio: 1.3; display: flex; align-items: center; justify-content: center;
-  position: relative; overflow: hidden;
+  min-height: 60px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid transparent; position: relative;
+}
+/* Intensity increases with points (further = harder = brighter) */
+.board-cell[data-pts="200"] {
+  background: rgba(255,215,0,0.05); border-color: rgba(255,215,0,0.2);
+}
+.board-cell[data-pts="400"] {
+  background: rgba(255,215,0,0.09); border-color: rgba(255,215,0,0.32);
+}
+.board-cell[data-pts="600"] {
+  background: rgba(255,215,0,0.15); border-color: rgba(255,215,0,0.48);
+  box-shadow: 0 0 10px rgba(255,215,0,0.08);
 }
 .board-cell:hover:not(.answered):not(.no-q) {
-  border-color: var(--cell-color); background: var(--surface2); transform: scale(1.04);
+  transform: scale(1.06);
+  background: rgba(255,215,0,0.25) !important;
+  border-color: var(--yellow) !important;
+  box-shadow: 0 0 16px rgba(255,215,0,0.25) !important;
 }
 .board-cell:active:not(.answered):not(.no-q) { transform: scale(0.96); }
-.board-cell.answered { opacity: 0.12; cursor: default; pointer-events: none; }
-.board-cell.no-q { opacity: 0.18; cursor: default; pointer-events: none; }
+.board-cell.answered { opacity: 0.08; cursor: default; pointer-events: none; }
+.board-cell.no-q { opacity: 0.15; cursor: default; pointer-events: none; }
+
 .cell-pts {
   font-family: 'Cairo', sans-serif; font-weight: 900;
-  font-size: clamp(0.85rem, 2.5vw, 1.5rem); color: var(--yellow);
-  text-shadow: 0 0 16px rgba(255,215,0,0.4);
+  font-size: clamp(0.75rem, 2.2vw, 1.3rem); color: var(--yellow);
+  text-shadow: 0 0 12px rgba(255,215,0,0.5);
 }
+
 .board-score-pill {
   font-family: 'Cairo', sans-serif; font-weight: 900;
   font-size: 1rem; color: var(--yellow);
   background: rgba(255,215,0,0.1); padding: 4px 12px;
   border-radius: 20px; border: 1px solid rgba(255,215,0,0.2);
-}
-.board-done-bar {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: rgba(7,7,15,0.96); border-top: 1px solid var(--border);
-  padding: 12px 18px 28px; backdrop-filter: blur(12px); z-index: 50;
-  display: flex; gap: 10px; display: none;
 }
 
 /* Points display in question screen */
@@ -1431,10 +1454,9 @@ function onGameBack() {
 
 function returnToBoard() {
   if (currentCell) {
-    const key = currentCell.catId + '-' + currentCell.pts;
+    const key = currentCell.catId + '-' + currentCell.slotKey;
     boardAnswered[key] = true;
   }
-  // Switch team for next cell
   if (settings.teamsMode) {
     boardCurrentTeam = 1 - boardCurrentTeam;
     updateBoardTeamUI();
@@ -1442,9 +1464,10 @@ function returnToBoard() {
   clearCanvas();
   buildBoardGrid();
   showScreen('board');
-  // Check if board is complete
+  // Check if all slots are answered or unavailable
+  const SLOTS = ['200L','200R','400L','400R','600L','600R'];
   const allDone = selectedCats.every(catId =>
-    POINT_TIERS.every(pts => boardAnswered[catId + '-' + pts] || !boardQuestions[catId + '-' + pts])
+    SLOTS.every(slot => boardAnswered[catId + '-' + slot] || !boardQuestions[catId + '-' + slot])
   );
   if (allDone) endBoardGame();
 }
@@ -2012,14 +2035,15 @@ function startBoard() {
   score = 0; correctCount = 0; passCount = 0;
 
   selectedCats.forEach(catId => {
-    const qs = [...(db[catId] || [])];
-    // Shuffle within each tier independently for variety
-    const tier0 = qs.slice(0, 2).sort(() => Math.random() - 0.5);
-    const tier1 = qs.slice(2, 4).sort(() => Math.random() - 0.5);
-    const tier2 = qs.slice(4, 6).sort(() => Math.random() - 0.5);
-    boardQuestions[catId + '-200'] = tier0[0] || null;
-    boardQuestions[catId + '-400'] = tier1[0] || null;
-    boardQuestions[catId + '-600'] = tier2[0] || null;
+    const qs = [...(db[catId] || [])].sort(() => Math.random() - 0.5);
+    // 6 slots: 200L, 200R, 400L, 400R, 600L, 600R
+    // 200 pts = easiest (indices 0,1), 400 = medium (2,3), 600 = hardest (4,5)
+    boardQuestions[catId + '-200L'] = qs[0] || null;
+    boardQuestions[catId + '-200R'] = qs[1] || null;
+    boardQuestions[catId + '-400L'] = qs[2] || null;
+    boardQuestions[catId + '-400R'] = qs[3] || null;
+    boardQuestions[catId + '-600L'] = qs[4] || null;
+    boardQuestions[catId + '-600R'] = qs[5] || null;
   });
 
   // Board team bar
@@ -2044,52 +2068,52 @@ function startBoard() {
 function buildBoardGrid() {
   const grid = document.getElementById('board-grid');
   grid.innerHTML = '';
-  const numCats = selectedCats.length;
-  grid.style.gridTemplateColumns = `repeat(${numCats}, 1fr)`;
 
-  // Header row
+  // Layout per row: [600L][400L][200L][CATEGORY][200R][400R][600R]
+  // Each category = one row, 7 columns fixed
+  const COL_KEYS = ['600L', '400L', '200L', null, '200R', '400R', '600R'];
+
   selectedCats.forEach(catId => {
     const cat = CATEGORIES.find(c => c.id === catId);
     const secColor = SECTIONS[cat.section].color;
-    const cell = document.createElement('div');
-    cell.className = 'board-header-cell';
-    cell.style.borderColor = secColor + '44';
-    cell.innerHTML = `<span class="bh-emoji">${cat.emoji}</span><div>${cat.name}</div>`;
-    grid.appendChild(cell);
-  });
 
-  // Point rows
-  POINT_TIERS.forEach(pts => {
-    selectedCats.forEach(catId => {
-      const key = catId + '-' + pts;
-      const q = boardQuestions[key];
-      const answered = boardAnswered[key];
-      const cat = CATEGORIES.find(c => c.id === catId);
-      const secColor = SECTIONS[cat.section].color;
+    COL_KEYS.forEach(slotKey => {
+      if (slotKey === null) {
+        // Center: category cell
+        const cell = document.createElement('div');
+        cell.className = 'board-cat-cell';
+        cell.style.setProperty('--cat-color', secColor);
+        cell.innerHTML = `<span class="bh-emoji">${cat.emoji}</span><div>${cat.name}</div>`;
+        grid.appendChild(cell);
+        return;
+      }
+
+      const fullKey = catId + '-' + slotKey;
+      const pts = parseInt(slotKey); // e.g. "600L" → 600
+      const q = boardQuestions[fullKey];
+      const answered = boardAnswered[fullKey];
 
       const cell = document.createElement('div');
       cell.className = 'board-cell' + (answered ? ' answered' : '') + (!q ? ' no-q' : '');
-      cell.style.setProperty('--cell-color', secColor);
+      cell.dataset.pts = pts;
 
       if (!answered && q) {
-        cell.onclick = () => openBoardQuestion(catId, pts);
+        cell.onclick = () => openBoardQuestion(catId, slotKey, pts);
         cell.innerHTML = `<span class="cell-pts">${pts}</span>`;
-      } else if (answered) {
-        cell.innerHTML = '';
       } else {
-        cell.innerHTML = `<span style="color:var(--muted);font-size:0.7rem">—</span>`;
+        cell.innerHTML = answered ? '' : `<span style="color:var(--border);font-size:0.8rem">—</span>`;
       }
       grid.appendChild(cell);
     });
   });
 }
 
-function openBoardQuestion(catId, pts) {
-  const key = catId + '-' + pts;
+function openBoardQuestion(catId, slotKey, pts) {
+  const key = catId + '-' + slotKey;
   const q = boardQuestions[key];
   if (!q || boardAnswered[key]) return;
 
-  currentCell = { catId, pts };
+  currentCell = { catId, slotKey, pts };
   currentCat = CATEGORIES.find(c => c.id === catId);
   currentQ = q;
 
@@ -2118,7 +2142,7 @@ function openBoardQuestion(catId, pts) {
 
   // Counter
   const answered = Object.keys(boardAnswered).length;
-  const total = selectedCats.length * POINT_TIERS.length;
+  const total = selectedCats.length * 6;
   document.getElementById('q-counter').textContent = `${answered + 1} / ${total} • ${pts} نقطة`;
 
   showScreen('game');
