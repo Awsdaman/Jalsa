@@ -637,6 +637,23 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
   border-radius: 20px; border: 1px solid rgba(255,215,0,0.2);
 }
 
+/* === FILE ATTACHMENT === */
+.btn-attach {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1.5px dashed var(--border);
+  color: var(--muted); padding: 8px 18px; border-radius: 10px;
+  font-size: 0.88rem; cursor: pointer; transition: 0.2s;
+  font-family: 'Tajawal', sans-serif; user-select: none;
+}
+.btn-attach:hover { border-color: var(--green); color: var(--green); }
+.btn-attach.has-file { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.07); border-style: solid; }
+.attached-img {
+  max-width: 100%; max-height: 220px; border-radius: 12px;
+  object-fit: contain; display: none; margin: 4px 0;
+}
+.audio-player-wrap { display: none; width: 100%; margin: 6px 0; }
+.audio-player-wrap audio { width: 100%; border-radius: 10px; outline: none; }
+
 /* Points display in question screen */
 .pts-indicator {
   font-family: 'Cairo', sans-serif; font-weight: 900;
@@ -860,10 +877,19 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
 
     <!-- Audio Mode -->
     <div id="mode-audio" class="hidden" style="width:100%">
-      <div class="q-card">
-        <div class="av-icon">🔊</div>
+      <div class="q-card" style="gap:12px">
+        <div class="av-icon" id="audio-icon">🔊</div>
+        <!-- Attached audio player -->
+        <div class="audio-player-wrap" id="audio-player-wrap">
+          <audio id="audio-player" controls></audio>
+        </div>
         <div class="av-prompt" id="audio-prompt"></div>
-        <div class="av-instr">المضيف يشغّل الكليب الصوتي من هاتفه<br>الباقي يخمنون</div>
+        <div class="av-instr" id="audio-instr">المضيف يشغّل الكليب الصوتي من هاتفه<br>الباقي يخمنون</div>
+        <!-- Attach button -->
+        <label class="btn-attach" id="audio-attach-btn">
+          📎 إرفاق ملف صوتي
+          <input type="file" accept="audio/*" style="display:none" onchange="attachAudio(this)">
+        </label>
         <div class="a-reveal" id="audio-a"></div>
       </div>
       <button class="btn-reveal" id="audio-reveal-btn" onclick="revealAudio()">👁️ اظهر الجواب</button>
@@ -875,10 +901,17 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
 
     <!-- Visual Mode -->
     <div id="mode-visual" class="hidden" style="width:100%">
-      <div class="q-card">
-        <div class="av-icon">👁️</div>
+      <div class="q-card" style="gap:12px">
+        <div class="av-icon" id="visual-icon">👁️</div>
+        <!-- Attached image display -->
+        <img id="visual-img" class="attached-img" alt="">
         <div class="av-prompt" id="visual-prompt"></div>
-        <div class="av-instr">المضيف يعرض الصورة من هاتفه<br>الباقي يخمنون</div>
+        <div class="av-instr" id="visual-instr">المضيف يعرض الصورة من هاتفه<br>الباقي يخمنون</div>
+        <!-- Attach button -->
+        <label class="btn-attach" id="visual-attach-btn">
+          📎 إرفاق صورة
+          <input type="file" accept="image/*" style="display:none" onchange="attachImage(this)">
+        </label>
         <div class="a-reveal" id="visual-a"></div>
       </div>
       <button class="btn-reveal" id="visual-reveal-btn" onclick="revealVisual()">👁️ اظهر الجواب</button>
@@ -1545,6 +1578,9 @@ function hideAllModes() {
   ['mode-qa','mode-taboo','mode-alphabet','mode-emoji','mode-draw','mode-act','mode-audio','mode-visual']
     .forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById('btn-back-cats').style.display = 'none';
+  // Stop any playing audio
+  const player = document.getElementById('audio-player');
+  if (player && !player.paused) { player.pause(); }
 }
 
 function showNoQ() {
@@ -1640,6 +1676,25 @@ function setupAudio() {
   document.getElementById('audio-a').style.display = 'none';
   document.getElementById('audio-reveal-btn').style.display = 'block';
   document.getElementById('audio-action-row').style.display = 'none';
+
+  const player = document.getElementById('audio-player');
+  const playerWrap = document.getElementById('audio-player-wrap');
+  const instr = document.getElementById('audio-instr');
+  const attachBtn = document.getElementById('audio-attach-btn');
+
+  if (currentQ.audio) {
+    player.src = currentQ.audio;
+    playerWrap.style.display = 'block';
+    instr.style.display = 'none';
+    attachBtn.classList.add('has-file');
+    attachBtn.childNodes[0].textContent = '📎 تغيير الملف الصوتي';
+  } else {
+    player.src = '';
+    playerWrap.style.display = 'none';
+    instr.style.display = '';
+    attachBtn.classList.remove('has-file');
+    attachBtn.childNodes[0].textContent = '📎 إرفاق ملف صوتي';
+  }
 }
 function revealAudio() {
   document.getElementById('audio-a').style.display = 'block';
@@ -1656,6 +1711,27 @@ function setupVisual() {
   document.getElementById('visual-a').style.display = 'none';
   document.getElementById('visual-reveal-btn').style.display = 'block';
   document.getElementById('visual-action-row').style.display = 'none';
+
+  const img = document.getElementById('visual-img');
+  const icon = document.getElementById('visual-icon');
+  const instr = document.getElementById('visual-instr');
+  const attachBtn = document.getElementById('visual-attach-btn');
+
+  if (currentQ.image) {
+    img.src = currentQ.image;
+    img.style.display = 'block';
+    icon.style.display = 'none';
+    instr.style.display = 'none';
+    attachBtn.classList.add('has-file');
+    attachBtn.childNodes[0].textContent = '📎 تغيير الصورة';
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+    icon.style.display = '';
+    instr.style.display = '';
+    attachBtn.classList.remove('has-file');
+    attachBtn.childNodes[0].textContent = '📎 إرفاق صورة';
+  }
 }
 function revealVisual() {
   document.getElementById('visual-a').style.display = 'block';
@@ -1946,6 +2022,75 @@ function copyOutput() {
     btn.textContent = '✅ تم النسخ!';
     setTimeout(() => { btn.textContent = '📋 نسخ JSON'; }, 2000);
   });
+}
+
+// ============================================================
+// FILE ATTACHMENTS (image / audio)
+// ============================================================
+function attachImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  compressImage(file, (dataUrl) => {
+    currentQ.image = dataUrl;
+    try { saveCustomQuestions(); } catch(e) {}
+
+    // Update UI immediately
+    const img = document.getElementById('visual-img');
+    const attachBtn = document.getElementById('visual-attach-btn');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('visual-icon').style.display = 'none';
+    document.getElementById('visual-instr').style.display = 'none';
+    attachBtn.classList.add('has-file');
+    attachBtn.childNodes[0].textContent = '📎 تغيير الصورة';
+  });
+}
+
+function attachAudio(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) {
+    alert('الملف كبير جداً (أكثر من 8MB). استخدم مقطع أقصر.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    currentQ.audio = e.target.result;
+    try { saveCustomQuestions(); } catch(e) {
+      alert('الملف كبير جداً للحفظ الدائم — سيعمل في هذه الجلسة فقط.');
+    }
+
+    // Update UI
+    const player = document.getElementById('audio-player');
+    const playerWrap = document.getElementById('audio-player-wrap');
+    const attachBtn = document.getElementById('audio-attach-btn');
+    player.src = e.target.result;
+    playerWrap.style.display = 'block';
+    document.getElementById('audio-instr').style.display = 'none';
+    attachBtn.classList.add('has-file');
+    attachBtn.childNodes[0].textContent = '📎 تغيير الملف الصوتي';
+    player.play().catch(() => {});
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 700;
+      let w = img.width, h = img.height;
+      if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      else if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 // Add questions to db, skip duplicates, persist, refresh UI
