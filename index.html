@@ -662,6 +662,96 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
   border-radius: 20px; border: 1px solid rgba(255,215,0,0.2);
 }
 
+/* === SETUP SCREEN (3-step flow) === */
+#setup.active {
+  display: flex !important; flex-direction: column; min-height: 100vh;
+}
+.setup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px 0;
+}
+.setup-logo {
+  font-family: 'Cairo', sans-serif; font-weight: 900;
+  font-size: clamp(1.5rem, 6vw, 2.4rem); line-height: 1;
+  background: linear-gradient(135deg, var(--green) 0%, #00ccff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.setup-progress {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 18px 10px;
+}
+.step-pill {
+  flex: 1; height: 5px; border-radius: 5px;
+  background: var(--border); transition: background 0.35s;
+}
+.step-pill.active { background: var(--green); }
+.step-pill.done { background: rgba(0,255,136,0.35); }
+
+/* Step 1 — Team names */
+.step1-body {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px 24px 48px;
+}
+.step-heading {
+  font-family: 'Cairo', sans-serif; font-weight: 900;
+  font-size: 1.55rem; text-align: center; margin-bottom: 6px;
+}
+.step-sub {
+  color: var(--muted); font-size: 0.9rem;
+  text-align: center; margin-bottom: 32px; line-height: 1.5;
+}
+.team-inputs { width: 100%; max-width: 430px; display: flex; flex-direction: column; gap: 12px; }
+.team-input-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: 16px; padding: 13px 18px; transition: border-color 0.25s;
+}
+.team-input-row.blue:focus-within { border-color: #4488ff; box-shadow: 0 0 18px rgba(68,136,255,0.15); }
+.team-input-row.red:focus-within  { border-color: #ff3355; box-shadow: 0 0 18px rgba(255,51,85,0.15); }
+.team-dot { font-size: 1.35rem; flex-shrink: 0; }
+.team-text-inp {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--text); font-family: 'Cairo', sans-serif;
+  font-weight: 700; font-size: 1rem; text-align: right; width: 0;
+}
+.team-text-inp::placeholder { color: var(--muted); font-weight: 400; }
+.vs-row {
+  text-align: center; font-family: 'Cairo', sans-serif;
+  font-weight: 900; font-size: 0.85rem; color: var(--muted);
+  letter-spacing: 3px; padding: 2px 0;
+}
+.btn-setup-next {
+  width: 100%; max-width: 430px; margin-top: 28px;
+  background: var(--green); color: #000; border: none; padding: 17px;
+  font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 1.1rem;
+  border-radius: 14px; cursor: pointer; transition: 0.2s;
+  box-shadow: 0 0 28px rgba(0,255,136,0.3);
+}
+.btn-setup-next:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* Step 2 — Category selection */
+.step2-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.step2-body.hidden { display: none !important; }
+.step2-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 18px 8px; flex-shrink: 0;
+}
+.step2-back {
+  background: none; border: none; color: var(--muted);
+  font-size: 1.2rem; cursor: pointer; padding: 4px 8px;
+  border-radius: 8px; transition: 0.2s;
+}
+.step2-back:hover { background: var(--surface2); color: var(--text); }
+.setup-counter {
+  font-family: 'Cairo', sans-serif; font-weight: 900;
+  font-size: 1.1rem; color: var(--green);
+  background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.25);
+  padding: 4px 14px; border-radius: 20px; transition: all 0.2s;
+}
+.setup-cats-scroll { flex: 1; overflow-y: auto; padding-bottom: 8px; }
+
 /* === WINNER CARD (end screen) === */
 .winner-card {
   background: linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,204,255,0.08));
@@ -675,8 +765,66 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
 </head>
 <body>
 
-<!-- ========== SPLASH ========== -->
-<div id="splash" class="screen active">
+<!-- ========== SETUP (3-step flow) ========== -->
+<div id="setup" class="screen active">
+
+  <!-- Header: logo + settings -->
+  <div class="setup-header">
+    <div class="setup-logo">لعبة الجلسة 🎮</div>
+    <button class="icon-btn" onclick="openSettings()" title="الإعدادات">⚙️</button>
+  </div>
+
+  <!-- Step progress pills -->
+  <div class="setup-progress">
+    <div class="step-pill active" id="pill-1"></div>
+    <div class="step-pill" id="pill-2"></div>
+  </div>
+
+  <!-- ── Step 1: Team Names ── -->
+  <div id="step-1" class="step1-body">
+    <div class="step-heading">🏆 أسماء الفرق</div>
+    <div class="step-sub">أدخل اسم كل فريق قبل بدء اللعبة</div>
+
+    <div class="team-inputs">
+      <div class="team-input-row blue">
+        <span class="team-dot">🔵</span>
+        <input type="text" id="team1-setup" class="team-text-inp"
+               value="الفريق الأزرق 🔵" placeholder="الفريق الأزرق 🔵">
+      </div>
+      <div class="vs-row">— VS —</div>
+      <div class="team-input-row red">
+        <span class="team-dot">🔴</span>
+        <input type="text" id="team2-setup" class="team-text-inp"
+               value="الفريق الأحمر 🔴" placeholder="الفريق الأحمر 🔴">
+      </div>
+    </div>
+
+    <button class="btn-setup-next" onclick="goToStep2()">التالي ←</button>
+  </div>
+
+  <!-- ── Step 2: Category Selection ── -->
+  <div id="step-2" class="step2-body hidden">
+    <div class="step2-topbar">
+      <button class="step2-back" onclick="goToStep1()">← رجوع</button>
+      <div class="step-heading" style="font-size:1.15rem;margin:0">🎯 اختر الفئات</div>
+      <div class="setup-counter" id="setup-counter">0 / 6</div>
+    </div>
+
+    <!-- Scrollable category grid -->
+    <div class="setup-cats-scroll" id="setup-cats-scroll"></div>
+
+    <!-- Fixed bottom bar (reuses .start-bar) -->
+    <div class="start-bar">
+      <div class="start-bar-info" id="setup-bar-info">اختر 6 فئات للبدء</div>
+      <button class="btn-start-board" id="setup-start-btn"
+              onclick="startBoardFromSetup()" disabled>ابدأ اللعبة 🎮</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== SPLASH (legacy, no longer default) ========== -->
+<div id="splash" class="screen">
   <div class="splash-glow"></div>
   <div class="splash-logo">لعبة الجلسة</div>
   <div class="splash-sub">اختر فئة وابدأ التحدي مع أصحابك 🎯</div>
@@ -948,7 +1096,7 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
     <div class="winner-name" id="winner-name"></div>
     <div class="winner-pts" id="winner-pts"></div>
   </div>
-  <button class="btn-play-again" onclick="showScreen('cat-select')">العب مجدداً 🔄</button>
+  <button class="btn-play-again" onclick="resetSetup()">العب مجدداً 🔄</button>
 </div>
 
 <!-- ========== SETTINGS MODAL ========== -->
@@ -1511,11 +1659,11 @@ function returnToBoard() {
 }
 
 function confirmEndBoard() {
-  if (confirm('تريد تنهي اللعبة وترجع للفئات؟')) {
+  if (confirm('تريد تنهي اللعبة وترجع للبداية؟')) {
     stopTimer();
     if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
     isBoardMode = false;
-    showScreen('cat-select');
+    resetSetup();
   }
 }
 
@@ -2166,7 +2314,141 @@ document.getElementById('settings-modal').addEventListener('click', function(e) 
 });
 
 // ============================================================
-// CATEGORY SELECTION SCREEN
+// SETUP FLOW (3-step)
+// ============================================================
+function goToStep2() {
+  // Read team names
+  settings.team1 = document.getElementById('team1-setup').value.trim() || 'الفريق الأزرق 🔵';
+  settings.team2 = document.getElementById('team2-setup').value.trim() || 'الفريق الأحمر 🔴';
+  settings.teamsMode = true;
+
+  // Sync to settings modal fields
+  document.getElementById('team1-name').value = settings.team1;
+  document.getElementById('team2-name').value = settings.team2;
+  document.getElementById('teams-toggle').checked = true;
+  document.getElementById('team-names-section').classList.remove('hidden');
+
+  // Advance progress
+  document.getElementById('pill-1').classList.remove('active');
+  document.getElementById('pill-1').classList.add('done');
+  document.getElementById('pill-2').classList.add('active');
+
+  // Show step 2
+  document.getElementById('step-1').classList.add('hidden');
+  document.getElementById('step-2').classList.remove('hidden');
+
+  // Build grid once
+  const scroll = document.getElementById('setup-cats-scroll');
+  if (!scroll.children.length) buildSetupCatGrid();
+}
+
+function goToStep1() {
+  document.getElementById('step-2').classList.add('hidden');
+  document.getElementById('step-1').classList.remove('hidden');
+
+  document.getElementById('pill-1').classList.add('active');
+  document.getElementById('pill-1').classList.remove('done');
+  document.getElementById('pill-2').classList.remove('active');
+}
+
+function resetSetup() {
+  // Clear selections
+  selectedCats = [];
+  document.querySelectorAll('#setup-cats-scroll .cat-sel-card').forEach(c => c.classList.remove('selected', 'dimmed'));
+  updateSetupCatUI();
+  // Go back to step 1
+  goToStep1();
+  showScreen('setup');
+}
+
+function buildSetupCatGrid() {
+  const scroll = document.getElementById('setup-cats-scroll');
+  scroll.innerHTML = '';
+  const sectionOrder = Object.keys(SECTIONS);
+
+  sectionOrder.forEach(secId => {
+    const cats = CATEGORIES.filter(c => c.section === secId);
+    if (!cats.length) return;
+    const secColor = SECTIONS[secId].color;
+
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = SECTIONS[secId].label;
+    scroll.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'cat-grid';
+
+    cats.forEach(cat => {
+      const qs = db[cat.id] || [];
+      const card = document.createElement('div');
+      card.className = 'cat-sel-card';
+      card.dataset.catId = cat.id;
+      card.dataset.catName = cat.name;
+      card.style.setProperty('--cat-color', secColor);
+      card.innerHTML = `
+        <div class="cat-sel-check">✓</div>
+        <span class="cat-emoji">${cat.emoji}</span>
+        <div class="cat-name">${cat.name}</div>
+        <div class="cat-count ${qs.length > 0 ? 'has-q' : ''}" style="--cat-color:${secColor}">
+          ${qs.length > 0 ? qs.length + ' سؤال' : 'لا يوجد أسئلة'}
+        </div>
+      `;
+      card.onclick = () => toggleSetupCat(cat.id, card);
+      grid.appendChild(card);
+    });
+    scroll.appendChild(grid);
+  });
+}
+
+function toggleSetupCat(catId, card) {
+  const max = settings.maxCategories || 6;
+  const idx = selectedCats.indexOf(catId);
+  if (idx >= 0) {
+    selectedCats.splice(idx, 1);
+    card.classList.remove('selected');
+  } else {
+    if (selectedCats.length >= max) return;
+    selectedCats.push(catId);
+    card.classList.add('selected');
+  }
+  updateSetupCatUI();
+}
+
+function updateSetupCatUI() {
+  const max = settings.maxCategories || 6;
+  const count = selectedCats.length;
+  const ready = count === max;
+
+  // Counter badge
+  const counter = document.getElementById('setup-counter');
+  if (counter) counter.textContent = ready ? `${count} / ${max} ✅` : `${count} / ${max}`;
+
+  // Bottom bar info
+  const info = document.getElementById('setup-bar-info');
+  if (info) info.textContent = ready ? '✅ الفئات جاهزة! اضغط للبدء' : `اختر ${max - count} فئة أخرى`;
+
+  // Start button
+  const startBtn = document.getElementById('setup-start-btn');
+  if (startBtn) startBtn.disabled = !ready;
+
+  // Dim cards when full
+  document.querySelectorAll('#setup-cats-scroll .cat-sel-card').forEach(c => {
+    const isSel = selectedCats.includes(c.dataset.catId);
+    c.classList.toggle('dimmed', !isSel && count >= max);
+  });
+}
+
+function startBoardFromSetup() {
+  // Final read of team names (in case user changed them)
+  settings.team1 = document.getElementById('team1-setup').value.trim() || 'الفريق الأزرق 🔵';
+  settings.team2 = document.getElementById('team2-setup').value.trim() || 'الفريق الأحمر 🔴';
+  settings.teamsMode = true;
+  startBoard();
+}
+
+// ============================================================
+// CATEGORY SELECTION SCREEN (legacy, kept for AI modal)
 // ============================================================
 function buildCatSelectGrid() {
   const container = document.getElementById('cat-select-container');
