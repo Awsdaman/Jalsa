@@ -1010,15 +1010,19 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
       <input type="number" class="form-number" id="gen-count" value="5" min="1" max="20">
     </div>
 
-    <button class="btn-generate" id="gen-btn" onclick="generateQuestions()">✨ ولّد الأسئلة</button>
+    <button class="btn-generate" id="gen-btn" onclick="generateQuestions()">✨ ولّد وأضف الأسئلة</button>
 
+    <!-- Success banner -->
+    <div id="ai-success" style="display:none;margin-top:14px;background:rgba(0,255,136,0.08);border:1.5px solid var(--green);border-radius:14px;padding:16px 18px;">
+      <div style="font-family:'Cairo',sans-serif;font-weight:700;font-size:1.05rem;color:var(--green);margin-bottom:6px">✅ تمت الإضافة!</div>
+      <div id="ai-success-msg" style="font-size:0.9rem;color:var(--muted);line-height:1.6"></div>
+      <button onclick="toggleAiJson()" style="margin-top:10px;background:none;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:8px;cursor:pointer;font-size:0.8rem">عرض JSON ▾</button>
+    </div>
+
+    <!-- JSON (collapsed by default, shown on toggle) -->
     <div class="ai-output-wrap" id="ai-output-wrap">
-      <div class="form-label" style="margin-top:14px">📋 الأسئلة المولّدة (انسخها لـ questions.json)</div>
       <div class="ai-output" id="ai-output"></div>
-      <button class="btn-copy" onclick="copyOutput()">📋 نسخ الأسئلة</button>
-      <div style="font-size:0.78rem;color:var(--muted);margin-top:8px;line-height:1.6">
-        📌 كيف تضيفها: افتح ملف <code style="color:var(--green)">questions.json</code> وأضف هذه الأسئلة داخل المصفوفة الخاصة بالفئة
-      </div>
+      <button class="btn-copy" onclick="copyOutput()">📋 نسخ JSON</button>
     </div>
   </div>
 </div>
@@ -1203,6 +1207,7 @@ const POINT_TIERS = [200, 400, 600];
 // INIT
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+  loadCustomQuestions(); // merge persisted AI questions into db first
   buildCategoryGrid();
   buildCatSelectGrid();
   populateAIDropdown();
@@ -1874,9 +1879,9 @@ async function generateQuestions() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner">⏳</span> جارٍ التوليد...';
 
-  const outputWrap = document.getElementById('ai-output-wrap');
-  const outputEl = document.getElementById('ai-output');
-  outputWrap.classList.remove('visible');
+  // Hide previous results
+  document.getElementById('ai-success').style.display = 'none';
+  document.getElementById('ai-output-wrap').classList.remove('visible');
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1898,20 +1903,39 @@ async function generateQuestions() {
     if (data.error) throw new Error(data.error.message);
 
     let text = data.content.map(b => b.text || '').join('');
-    // Clean markdown code fences if present
     text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
-    // Validate it's JSON
-    JSON.parse(text); // throws if invalid
+    const parsed = JSON.parse(text); // throws if invalid
+    if (!Array.isArray(parsed)) throw new Error('الناتج ليس مصفوفة JSON صحيحة');
 
-    outputEl.textContent = text;
-    outputWrap.classList.add('visible');
+    // ✅ Auto-add to db
+    const added = addQuestionsToDb(catId, parsed);
+
+    // Show success banner
+    document.getElementById('ai-success').style.display = 'block';
+    document.getElementById('ai-success-msg').textContent =
+      `تمت إضافة ${added} سؤال جديد إلى فئة "${catName}". الفئة الآن تحتوي على ${db[catId].length} سؤال.`;
+
+    // Store JSON for optional viewing/copy
+    document.getElementById('ai-output').textContent = text;
 
   } catch(err) {
     alert('خطأ: ' + err.message);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '✨ ولّد الأسئلة';
+    btn.innerHTML = '✨ ولّد وأضف الأسئلة';
+  }
+}
+
+function toggleAiJson() {
+  const wrap = document.getElementById('ai-output-wrap');
+  const btn = document.querySelector('#ai-success button');
+  if (wrap.classList.contains('visible')) {
+    wrap.classList.remove('visible');
+    btn.textContent = 'عرض JSON ▾';
+  } else {
+    wrap.classList.add('visible');
+    btn.textContent = 'إخفاء JSON ▴';
   }
 }
 
@@ -1920,7 +1944,71 @@ function copyOutput() {
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('.btn-copy');
     btn.textContent = '✅ تم النسخ!';
-    setTimeout(() => { btn.textContent = '📋 نسخ الأسئلة'; }, 2000);
+    setTimeout(() => { btn.textContent = '📋 نسخ JSON'; }, 2000);
+  });
+}
+
+// Add questions to db, skip duplicates, persist, refresh UI
+function addQuestionsToDb(catId, questions) {
+  if (!db[catId]) db[catId] = [];
+  let added = 0;
+  questions.forEach(q => {
+    // Deduplicate by question text or word
+    const isDupe = db[catId].some(existing =>
+      (existing.q && existing.q === q.q) ||
+      (existing.word && existing.word === q.word)
+    );
+    if (!isDupe) {
+      db[catId].push(q);
+      added++;
+    }
+  });
+  if (added > 0) {
+    saveCustomQuestions();
+    refreshCatCounts();
+  }
+  return added;
+}
+
+function saveCustomQuestions() {
+  // Save only questions added beyond the original built-in db
+  // We store the full current db per category that has been modified
+  const custom = {};
+  Object.keys(db).forEach(catId => {
+    // Only save if category has data (may have been extended)
+    if (db[catId] && db[catId].length > 0) {
+      custom[catId] = db[catId];
+    }
+  });
+  try { localStorage.setItem('jalsa_custom_db', JSON.stringify(custom)); } catch(e) {}
+}
+
+function loadCustomQuestions() {
+  const saved = localStorage.getItem('jalsa_custom_db');
+  if (!saved) return;
+  try {
+    const custom = JSON.parse(saved);
+    Object.keys(custom).forEach(catId => {
+      if (!db[catId]) db[catId] = [];
+      custom[catId].forEach(q => {
+        const isDupe = db[catId].some(existing =>
+          (existing.q && existing.q === q.q) ||
+          (existing.word && existing.word === q.word)
+        );
+        if (!isDupe) db[catId].push(q);
+      });
+    });
+  } catch(e) {}
+}
+
+function refreshCatCounts() {
+  // Update count badges in both category grids
+  document.querySelectorAll('[data-id]').forEach(el => {
+    const catId = el.dataset.id;
+    if (!catId) return;
+    const count = db[catId] ? db[catId].length : 0;
+    el.textContent = count > 0 ? count + ' سؤال' : 'لا يوجد أسئلة';
+    el.className = 'cat-count' + (count > 0 ? ' has-q' : '');
   });
 }
 
