@@ -525,6 +525,103 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
   100%{transform:translateY(105vh) rotate(720deg); opacity:0}
 }
 
+/* === CATEGORY SELECTION SCREEN === */
+#cat-select { padding-bottom: 110px; }
+.cat-sel-card {
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: 16px; padding: 16px 10px 12px;
+  text-align: center; cursor: pointer; transition: all 0.18s;
+  position: relative; overflow: hidden; user-select: none;
+}
+.cat-sel-card:hover:not(.dimmed) { border-color: var(--cat-color); transform: translateY(-2px); }
+.cat-sel-card:active:not(.dimmed) { transform: scale(0.96); }
+.cat-sel-card.selected {
+  border-color: var(--cat-color); background: var(--surface2);
+  box-shadow: 0 0 18px rgba(0,255,136,0.15);
+}
+.cat-sel-check {
+  display: none; position: absolute; top: 6px; left: 6px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--green); color: #000;
+  font-size: 0.7rem; font-weight: 900;
+  align-items: center; justify-content: center;
+}
+.cat-sel-card.selected .cat-sel-check { display: flex; }
+.cat-sel-card.dimmed { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+.start-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(7,7,15,0.96); border-top: 1px solid var(--border);
+  padding: 12px 18px 28px; backdrop-filter: blur(12px); z-index: 50;
+  display: flex; flex-direction: column; gap: 8px; align-items: center;
+}
+.start-bar-info { font-size: 0.88rem; color: var(--muted); }
+.btn-start-board {
+  width: 100%; max-width: 380px;
+  background: var(--green); color: #000; border: none; padding: 16px;
+  font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 1.1rem;
+  border-radius: 14px; cursor: pointer; transition: 0.2s;
+  box-shadow: 0 0 30px rgba(0,255,136,0.3);
+}
+.btn-start-board:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+.btn-start-board:not(:disabled):hover { opacity: 0.9; transform: translateY(-1px); }
+.sel-counter-badge {
+  font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.9rem;
+  background: rgba(0,255,136,0.12); border: 1px solid rgba(0,255,136,0.3);
+  color: var(--green); padding: 4px 12px; border-radius: 20px;
+}
+
+/* === BOARD SCREEN === */
+#board.active { display: flex !important; flex-direction: column; min-height: 100vh; }
+.board-wrap { flex: 1; overflow: auto; padding: 10px 8px 20px; }
+.board-grid { display: grid; gap: 5px; }
+.board-header-cell {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 4px;
+  text-align: center; font-family: 'Cairo', sans-serif;
+  font-weight: 700; font-size: 0.68rem; color: var(--text);
+  line-height: 1.3; min-height: 56px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  word-break: break-word;
+}
+.board-header-cell .bh-emoji { font-size: 1.3rem; }
+.board-cell {
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: 10px; cursor: pointer; transition: all 0.15s;
+  aspect-ratio: 1.3; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.board-cell:hover:not(.answered):not(.no-q) {
+  border-color: var(--cell-color); background: var(--surface2); transform: scale(1.04);
+}
+.board-cell:active:not(.answered):not(.no-q) { transform: scale(0.96); }
+.board-cell.answered { opacity: 0.12; cursor: default; pointer-events: none; }
+.board-cell.no-q { opacity: 0.18; cursor: default; pointer-events: none; }
+.cell-pts {
+  font-family: 'Cairo', sans-serif; font-weight: 900;
+  font-size: clamp(0.85rem, 2.5vw, 1.5rem); color: var(--yellow);
+  text-shadow: 0 0 16px rgba(255,215,0,0.4);
+}
+.board-score-pill {
+  font-family: 'Cairo', sans-serif; font-weight: 900;
+  font-size: 1rem; color: var(--yellow);
+  background: rgba(255,215,0,0.1); padding: 4px 12px;
+  border-radius: 20px; border: 1px solid rgba(255,215,0,0.2);
+}
+.board-done-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(7,7,15,0.96); border-top: 1px solid var(--border);
+  padding: 12px 18px 28px; backdrop-filter: blur(12px); z-index: 50;
+  display: flex; gap: 10px; display: none;
+}
+
+/* Points display in question screen */
+.pts-indicator {
+  font-family: 'Cairo', sans-serif; font-weight: 900;
+  font-size: 1rem; color: var(--yellow);
+  background: rgba(255,215,0,0.1); padding: 4px 12px;
+  border-radius: 20px; border: 1px solid rgba(255,215,0,0.2);
+}
+
 /* === WINNER CARD (end screen) === */
 .winner-card {
   background: linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,204,255,0.08));
@@ -543,10 +640,54 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
   <div class="splash-glow"></div>
   <div class="splash-logo">لعبة الجلسة</div>
   <div class="splash-sub">اختر فئة وابدأ التحدي مع أصحابك 🎯</div>
-  <button class="btn-start" onclick="showScreen('categories')">ابدأ اللعب</button>
+  <button class="btn-start" onclick="showScreen('cat-select')">ابدأ اللعب</button>
 </div>
 
-<!-- ========== CATEGORIES ========== -->
+<!-- ========== CATEGORY SELECTION ========== -->
+<div id="cat-select" class="screen">
+  <div class="top-bar">
+    <button class="icon-btn" onclick="showScreen('splash')">←</button>
+    <div class="top-title">🎯 اختر الفئات</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="sel-counter-badge" id="sel-counter">0 / 6</div>
+      <button class="icon-btn" onclick="openSettings()" title="الإعدادات">⚙️</button>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <input type="text" class="search-input" id="cs-search" placeholder="🔍 ابحث عن فئة..." oninput="filterCatSelect(this.value)">
+  </div>
+  <div id="cat-select-container"></div>
+  <div class="start-bar">
+    <div class="start-bar-info" id="start-bar-info">اختر 6 فئات للبدء</div>
+    <button class="btn-start-board" id="btn-start-board" onclick="startBoard()" disabled>ابدأ اللعبة 🎮</button>
+  </div>
+</div>
+
+<!-- ========== BOARD ========== -->
+<div id="board" class="screen">
+  <div class="top-bar">
+    <button class="icon-btn" onclick="confirmEndBoard()">←</button>
+    <div class="top-title" style="color:var(--green)">لعبة الجلسة 🎮</div>
+    <div class="board-score-pill" id="board-score-pill">0 نقطة</div>
+  </div>
+  <!-- Team bar (teams mode) -->
+  <div class="team-bar hidden" id="board-team-bar">
+    <div class="team-slot active" id="bts0">
+      <div class="ts-name" id="bts-name0">فريق 1</div>
+      <div class="ts-pts" id="bts-pts0">0</div>
+    </div>
+    <div class="turn-div">⚡</div>
+    <div class="team-slot" id="bts1">
+      <div class="ts-name" id="bts-name1">فريق 2</div>
+      <div class="ts-pts" id="bts-pts1">0</div>
+    </div>
+  </div>
+  <div class="board-wrap">
+    <div class="board-grid" id="board-grid"></div>
+  </div>
+</div>
+
+<!-- ========== CATEGORIES (legacy / AI generator access) ========== -->
 <div id="categories" class="screen">
   <div class="top-bar">
     <div class="top-title">🎮 لعبة الجلسة</div>
@@ -564,9 +705,10 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
 <!-- ========== GAME ========== -->
 <div id="game" class="screen">
   <div class="game-header">
-    <button class="back-btn" onclick="endGame()">←</button>
+    <button class="back-btn" id="game-back-btn" onclick="onGameBack()">←</button>
     <div class="game-cat-label" id="game-cat-label">الفئة</div>
     <div class="score-badge" id="score-badge">0 نقطة</div>
+    <div class="pts-indicator hidden" id="pts-indicator">200</div>
   </div>
 
   <!-- Team Bar (shown in teams mode) -->
@@ -750,7 +892,7 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
     <div class="winner-name" id="winner-name"></div>
     <div class="winner-pts" id="winner-pts"></div>
   </div>
-  <button class="btn-play-again" onclick="showScreen('categories')">العب مجدداً 🔄</button>
+  <button class="btn-play-again" onclick="showScreen('cat-select')">العب مجدداً 🔄</button>
 </div>
 
 <!-- ========== SETTINGS MODAL ========== -->
@@ -780,6 +922,16 @@ input:checked + .toggle-slider::before { transform: translateX(23px); background
       <div class="form-group">
         <label class="form-label">🔴 اسم الفريق الثاني</label>
         <input type="text" class="form-input" id="team2-name" placeholder="فريق 2">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🎯 عدد الفئات في اللعبة</label>
+      <div class="timer-options">
+        <button class="catcount-opt" data-c="4" onclick="selectCatCountOpt(this)">4</button>
+        <button class="catcount-opt" data-c="5" onclick="selectCatCountOpt(this)">5</button>
+        <button class="catcount-opt active" data-c="6" onclick="selectCatCountOpt(this)">6</button>
+        <button class="catcount-opt" data-c="8" onclick="selectCatCountOpt(this)">8</button>
       </div>
     </div>
 
@@ -1006,19 +1158,30 @@ let timeLeft = 60;
 let drawColor = "#000";
 let isErasing = false;
 
-// — New state —
-let settings = { teamsMode: false, team1: 'فريق 1', team2: 'فريق 2', timerDuration: 60 };
+// — Settings & teams —
+let settings = { teamsMode: false, team1: 'فريق 1', team2: 'فريق 2', timerDuration: 60, maxCategories: 6 };
 let teamScores = [0, 0];
 let currentTeam = 0;
-let usedIndices = {};   // catId -> Set of used indices
+let usedIndices = {};
 let questionNum = 0;
 let autoAdvanceTimer = null;
+
+// — Board mode —
+let isBoardMode = false;
+let selectedCats = [];
+let boardAnswered = {};   // "catId-pts" -> true
+let boardQuestions = {};  // "catId-pts" -> questionObj
+let boardTeamScores = [0, 0];
+let boardCurrentTeam = 0;
+let currentCell = null;   // { catId, pts }
+const POINT_TIERS = [200, 400, 600];
 
 // ============================================================
 // INIT
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
   buildCategoryGrid();
+  buildCatSelectGrid();
   populateAIDropdown();
   loadAPIKey();
   loadSettings();
@@ -1190,6 +1353,10 @@ function nextQuestion() {
   passCount++;
   clearCanvas();
   if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
+  if (isBoardMode) {
+    returnToBoard();
+    return;
+  }
   if (settings.teamsMode) {
     currentTeam = 1 - currentTeam;
     updateTeamUI();
@@ -1200,6 +1367,10 @@ function nextQuestion() {
 function onNextQ() {
   if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
   clearCanvas();
+  if (isBoardMode) {
+    returnToBoard();
+    return;
+  }
   if (settings.teamsMode) {
     currentTeam = 1 - currentTeam;
     updateTeamUI();
@@ -1208,11 +1379,20 @@ function onNextQ() {
 }
 
 function correct() {
-  score += 10;
+  const pts = isBoardMode ? currentCell.pts : 10;
+  score += pts;
   correctCount++;
   if (settings.teamsMode) {
-    teamScores[currentTeam] += 10;
+    if (isBoardMode) {
+      boardTeamScores[boardCurrentTeam] += pts;
+      updateBoardTeamUI();
+    } else {
+      teamScores[currentTeam] += pts;
+    }
     updateTeamUI();
+  }
+  if (isBoardMode) {
+    updateBoardScore();
   }
   updateScoreBadge(true);
   stopTimer();
@@ -1221,15 +1401,83 @@ function correct() {
 }
 
 function showEndButtons() {
+  if (isBoardMode) {
+    // In board mode: show "back to board" button, no auto-advance
+    document.getElementById('btn-next-q').textContent = 'العودة للوحة 🎯';
+    document.getElementById('btn-next-q').style.display = 'block';
+    document.getElementById('btn-back-cats').style.display = 'none';
+    return;
+  }
+  document.getElementById('btn-next-q').textContent = 'السؤال التالي ⏩';
   document.getElementById('btn-next-q').style.display = 'block';
   document.getElementById('btn-back-cats').style.display = 'block';
-  // Auto-advance after 3 seconds
   if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
   autoAdvanceTimer = setTimeout(() => {
     if (document.getElementById('btn-next-q').style.display !== 'none') {
       onNextQ();
     }
   }, 3000);
+}
+
+function onGameBack() {
+  if (isBoardMode) {
+    stopTimer();
+    if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
+    returnToBoard();
+  } else {
+    endGame();
+  }
+}
+
+function returnToBoard() {
+  if (currentCell) {
+    const key = currentCell.catId + '-' + currentCell.pts;
+    boardAnswered[key] = true;
+  }
+  // Switch team for next cell
+  if (settings.teamsMode) {
+    boardCurrentTeam = 1 - boardCurrentTeam;
+    updateBoardTeamUI();
+  }
+  clearCanvas();
+  buildBoardGrid();
+  showScreen('board');
+  // Check if board is complete
+  const allDone = selectedCats.every(catId =>
+    POINT_TIERS.every(pts => boardAnswered[catId + '-' + pts] || !boardQuestions[catId + '-' + pts])
+  );
+  if (allDone) endBoardGame();
+}
+
+function confirmEndBoard() {
+  if (confirm('تريد تنهي اللعبة وترجع للفئات؟')) {
+    stopTimer();
+    if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
+    isBoardMode = false;
+    showScreen('cat-select');
+  }
+}
+
+function endBoardGame() {
+  score = boardTeamScores[0] + boardTeamScores[1] || score;
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('stat-correct').textContent = correctCount;
+  document.getElementById('stat-pass').textContent = passCount;
+  const winnerCard = document.getElementById('winner-card');
+  if (settings.teamsMode) {
+    winnerCard.classList.remove('hidden');
+    const tied = boardTeamScores[0] === boardTeamScores[1];
+    const winTeam = boardTeamScores[0] >= boardTeamScores[1] ? 0 : 1;
+    const names = [settings.team1, settings.team2];
+    document.getElementById('winner-name').textContent = tied ? 'تعادل! 🤝' : '🏆 ' + names[winTeam];
+    document.getElementById('winner-pts').textContent = tied
+      ? `${boardTeamScores[0]} نقطة لكل فريق`
+      : `${boardTeamScores[winTeam]} نقطة`;
+  } else {
+    winnerCard.classList.add('hidden');
+  }
+  isBoardMode = false;
+  showScreen('end-screen');
 }
 
 function endGame() {
@@ -1431,7 +1679,7 @@ function updateTimerUI() {
 
 function onTimerEnd() {
   passCount++;
-  if (settings.teamsMode) {
+  if (!isBoardMode && settings.teamsMode) {
     currentTeam = 1 - currentTeam;
     updateTeamUI();
   }
@@ -1535,6 +1783,13 @@ function clearCanvas() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // Reset pts indicator when not in question screen
+  if (id !== 'game') {
+    const pi = document.getElementById('pts-indicator');
+    if (pi) pi.classList.add('hidden');
+    const sb = document.getElementById('score-badge');
+    if (sb) sb.style.display = '';
+  }
 }
 
 // ============================================================
@@ -1655,6 +1910,253 @@ document.getElementById('settings-modal').addEventListener('click', function(e) 
 });
 
 // ============================================================
+// CATEGORY SELECTION SCREEN
+// ============================================================
+function buildCatSelectGrid() {
+  const container = document.getElementById('cat-select-container');
+  if (!container) return;
+  container.innerHTML = '';
+  const sectionOrder = Object.keys(SECTIONS);
+
+  sectionOrder.forEach(secId => {
+    const cats = CATEGORIES.filter(c => c.section === secId);
+    if (!cats.length) return;
+    const secColor = SECTIONS[secId].color;
+
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = SECTIONS[secId].label;
+    container.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'cat-grid';
+    grid.dataset.csSection = secId;
+
+    cats.forEach(cat => {
+      const qs = db[cat.id] || [];
+      const card = document.createElement('div');
+      card.className = 'cat-sel-card';
+      card.dataset.catId = cat.id;
+      card.dataset.catName = cat.name;
+      card.style.setProperty('--cat-color', secColor);
+      card.innerHTML = `
+        <div class="cat-sel-check">✓</div>
+        <span class="cat-emoji">${cat.emoji}</span>
+        <div class="cat-name">${cat.name}</div>
+        <div class="cat-count ${qs.length > 0 ? 'has-q' : ''}" style="--cat-color:${secColor}">
+          ${qs.length > 0 ? qs.length + ' سؤال' : 'لا يوجد أسئلة'}
+        </div>
+      `;
+      card.onclick = () => toggleCatSelect(cat.id, card, secColor);
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  });
+}
+
+function toggleCatSelect(catId, card, color) {
+  const max = settings.maxCategories || 6;
+  const idx = selectedCats.indexOf(catId);
+  if (idx >= 0) {
+    selectedCats.splice(idx, 1);
+    card.classList.remove('selected');
+  } else {
+    if (selectedCats.length >= max) return;
+    selectedCats.push(catId);
+    card.classList.add('selected');
+  }
+  updateCatSelUI();
+}
+
+function updateCatSelUI() {
+  const max = settings.maxCategories || 6;
+  const count = selectedCats.length;
+  document.getElementById('sel-counter').textContent = count + ' / ' + max;
+  const ready = count === max;
+  document.getElementById('btn-start-board').disabled = !ready;
+  document.getElementById('start-bar-info').textContent = ready
+    ? '✅ الفئات جاهزة! اضغط للبدء'
+    : `اختر ${max - count} فئة أخرى`;
+  // Dim unselectable cards
+  document.querySelectorAll('.cat-sel-card').forEach(card => {
+    const isSelected = selectedCats.includes(card.dataset.catId);
+    const isFull = count >= max && !isSelected;
+    card.classList.toggle('dimmed', isFull);
+  });
+}
+
+function filterCatSelect(query) {
+  const q = query.trim().toLowerCase();
+  document.querySelectorAll('#cat-select-container .cat-sel-card').forEach(card => {
+    const name = card.dataset.catName.toLowerCase();
+    card.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+  document.querySelectorAll('#cat-select-container .cat-grid').forEach(grid => {
+    const visible = [...grid.querySelectorAll('.cat-sel-card')].some(c => c.style.display !== 'none');
+    grid.style.display = visible ? '' : 'none';
+    if (grid.previousElementSibling) grid.previousElementSibling.style.display = visible ? '' : 'none';
+  });
+}
+
+// ============================================================
+// BOARD
+// ============================================================
+function startBoard() {
+  if (!selectedCats.length) return;
+
+  // Pre-assign one question per cell (tier based on array position)
+  boardAnswered = {};
+  boardQuestions = {};
+  boardTeamScores = [0, 0];
+  boardCurrentTeam = 0;
+  score = 0; correctCount = 0; passCount = 0;
+
+  selectedCats.forEach(catId => {
+    const qs = [...(db[catId] || [])];
+    // Shuffle within each tier independently for variety
+    const tier0 = qs.slice(0, 2).sort(() => Math.random() - 0.5);
+    const tier1 = qs.slice(2, 4).sort(() => Math.random() - 0.5);
+    const tier2 = qs.slice(4, 6).sort(() => Math.random() - 0.5);
+    boardQuestions[catId + '-200'] = tier0[0] || null;
+    boardQuestions[catId + '-400'] = tier1[0] || null;
+    boardQuestions[catId + '-600'] = tier2[0] || null;
+  });
+
+  // Board team bar
+  const btb = document.getElementById('board-team-bar');
+  if (settings.teamsMode) {
+    btb.classList.remove('hidden');
+    document.getElementById('bts-name0').textContent = settings.team1;
+    document.getElementById('bts-name1').textContent = settings.team2;
+    document.getElementById('board-score-pill').style.display = 'none';
+    updateBoardTeamUI();
+  } else {
+    btb.classList.add('hidden');
+    document.getElementById('board-score-pill').style.display = '';
+    document.getElementById('board-score-pill').textContent = '0 نقطة';
+  }
+
+  buildBoardGrid();
+  isBoardMode = true;
+  showScreen('board');
+}
+
+function buildBoardGrid() {
+  const grid = document.getElementById('board-grid');
+  grid.innerHTML = '';
+  const numCats = selectedCats.length;
+  grid.style.gridTemplateColumns = `repeat(${numCats}, 1fr)`;
+
+  // Header row
+  selectedCats.forEach(catId => {
+    const cat = CATEGORIES.find(c => c.id === catId);
+    const secColor = SECTIONS[cat.section].color;
+    const cell = document.createElement('div');
+    cell.className = 'board-header-cell';
+    cell.style.borderColor = secColor + '44';
+    cell.innerHTML = `<span class="bh-emoji">${cat.emoji}</span><div>${cat.name}</div>`;
+    grid.appendChild(cell);
+  });
+
+  // Point rows
+  POINT_TIERS.forEach(pts => {
+    selectedCats.forEach(catId => {
+      const key = catId + '-' + pts;
+      const q = boardQuestions[key];
+      const answered = boardAnswered[key];
+      const cat = CATEGORIES.find(c => c.id === catId);
+      const secColor = SECTIONS[cat.section].color;
+
+      const cell = document.createElement('div');
+      cell.className = 'board-cell' + (answered ? ' answered' : '') + (!q ? ' no-q' : '');
+      cell.style.setProperty('--cell-color', secColor);
+
+      if (!answered && q) {
+        cell.onclick = () => openBoardQuestion(catId, pts);
+        cell.innerHTML = `<span class="cell-pts">${pts}</span>`;
+      } else if (answered) {
+        cell.innerHTML = '';
+      } else {
+        cell.innerHTML = `<span style="color:var(--muted);font-size:0.7rem">—</span>`;
+      }
+      grid.appendChild(cell);
+    });
+  });
+}
+
+function openBoardQuestion(catId, pts) {
+  const key = catId + '-' + pts;
+  const q = boardQuestions[key];
+  if (!q || boardAnswered[key]) return;
+
+  currentCell = { catId, pts };
+  currentCat = CATEGORIES.find(c => c.id === catId);
+  currentQ = q;
+
+  const secColor = SECTIONS[currentCat.section].color;
+  document.getElementById('game-cat-label').textContent = currentCat.emoji + ' ' + currentCat.name;
+  document.getElementById('game-cat-label').style.color = secColor;
+
+  // Points indicator
+  const ptsEl = document.getElementById('pts-indicator');
+  ptsEl.textContent = pts + ' 🪙';
+  ptsEl.classList.remove('hidden');
+  document.getElementById('score-badge').style.display = 'none';
+
+  // Team bar in question screen
+  const teamBar = document.getElementById('team-bar');
+  if (settings.teamsMode) {
+    teamBar.classList.remove('hidden');
+    document.getElementById('ts-name0').textContent = settings.team1;
+    document.getElementById('ts-name1').textContent = settings.team2;
+    // Sync team turn from board
+    currentTeam = boardCurrentTeam;
+    updateTeamUI();
+  } else {
+    teamBar.classList.add('hidden');
+  }
+
+  // Counter
+  const answered = Object.keys(boardAnswered).length;
+  const total = selectedCats.length * POINT_TIERS.length;
+  document.getElementById('q-counter').textContent = `${answered + 1} / ${total} • ${pts} نقطة`;
+
+  showScreen('game');
+  hideAllModes();
+  document.getElementById('no-q-state').classList.add('hidden');
+  document.getElementById('btn-back-cats').style.display = 'none';
+  document.getElementById('btn-next-q').style.display = 'none';
+
+  const mode = q.mode || currentCat.defaultMode;
+  switch(mode) {
+    case 'qa': setupQA(); break;
+    case 'taboo': setupTaboo(); break;
+    case 'alphabet': setupAlphabet(); break;
+    case 'emoji': setupEmoji(); break;
+    case 'draw': setupDraw(); break;
+    case 'act': setupAct(); break;
+    case 'audio': setupAudio(); break;
+    case 'visual': setupVisual(); break;
+    default: setupQA();
+  }
+  startTimer();
+}
+
+function updateBoardScore() {
+  const total = settings.teamsMode
+    ? boardTeamScores[0] + boardTeamScores[1]
+    : score;
+  document.getElementById('board-score-pill').textContent = total + ' نقطة';
+}
+
+function updateBoardTeamUI() {
+  document.getElementById('bts-pts0').textContent = boardTeamScores[0];
+  document.getElementById('bts-pts1').textContent = boardTeamScores[1];
+  document.getElementById('bts0').classList.toggle('active', boardCurrentTeam === 0);
+  document.getElementById('bts1').classList.toggle('active', boardCurrentTeam === 1);
+}
+
+// ============================================================
 // SETTINGS
 // ============================================================
 function loadSettings() {
@@ -1669,6 +2171,10 @@ function loadSettings() {
   document.querySelectorAll('.timer-opt').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.t) === settings.timerDuration);
   });
+  document.querySelectorAll('.catcount-opt').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.c) === settings.maxCategories);
+  });
+  updateCatSelUI();
 }
 
 function openSettings() {
@@ -1689,12 +2195,22 @@ function selectTimerOpt(btn) {
   btn.classList.add('active');
 }
 
+function selectCatCountOpt(btn) {
+  document.querySelectorAll('.catcount-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
 function saveSettings() {
   settings.teamsMode = document.getElementById('teams-toggle').checked;
   settings.team1 = document.getElementById('team1-name').value.trim() || 'فريق 1';
   settings.team2 = document.getElementById('team2-name').value.trim() || 'فريق 2';
   const activeOpt = document.querySelector('.timer-opt.active');
   settings.timerDuration = activeOpt ? parseInt(activeOpt.dataset.t) : 60;
+  const activeCatOpt = document.querySelector('.catcount-opt.active');
+  settings.maxCategories = activeCatOpt ? parseInt(activeCatOpt.dataset.c) : 6;
+  // Reset selection if count changed
+  selectedCats = [];
+  updateCatSelUI();
   localStorage.setItem('jalsa_settings', JSON.stringify(settings));
 
   const btn = document.getElementById('save-settings-btn');
