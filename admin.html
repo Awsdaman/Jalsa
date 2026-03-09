@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم الجلسة 🛠️</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07070f;
+  --surface: #0f0f1c;
+  --surface2: #181828;
+  --border: #252538;
+  --text: #eeeeff;
+  --muted: #6666aa;
+  --green: #00ff88;
+  --red: #ff3355;
+  --orange: #ff6b35;
+  --blue: #4488ff;
+  --purple: #9b5de5;
+  --yellow: #ffd700;
+  --pink: #f72585;
+  --cyan: #4cc9f0;
+  --teal: #06d6a0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Tajawal', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,136,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ── LOGIN ──────────────────────────────────────────────────── */
+#login-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 20px;
+  padding: 30px;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 36px;
+  max-width: 380px; width: 100%;
+  text-align: center;
+}
+.login-logo {
+  font-family: 'Cairo', sans-serif; font-weight: 900;
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, var(--green) 0%, #00ccff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+.login-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 30px; }
+.login-label {
+  display: block; text-align: right;
+  font-size: 0.88rem; color: var(--muted);
+  margin-bottom: 8px;
+}
+.login-input {
+  width: 100%;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 13px 16px;
+  border-radius: 12px; font-family: 'Tajawal', sans-serif;
+  font-size: 1rem; outline: none; transition: 0.2s;
+  margin-bottom: 16px; text-align: center;
+  letter-spacing: 4px;
+}
+.login-input:focus { border-color: var(--green); }
+.login-btn {
+  width: 100%;
+  background: var(--green); color: #000;
+  border: none; padding: 14px;
+  font-family: 'Cairo', sans-serif; font-weight: 700;
+  font-size: 1.05rem; border-radius: 12px;
+  cursor: pointer; transition: 0.2s;
+}
+.login-btn:hover { opacity: 0.9; }
+.login-err {
+  color: var(--red); font-size: 0.88rem;
+  margin-top: 10px; min-height: 20px;
+}
+
+/* ── APP LAYOUT ─────────────────────────────────────────────── */
+#admin-app { display: none; min-height: 100vh; position: relative; z-index: 1; }
+#admin-app.visible { display: flex; flex-direction: column; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(15,15,28,0.97);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(10px);
+  gap: 10px; flex-wrap: wrap;
+}
+.topbar-title {
+  font-family: 'Cairo', sans-serif; font-weight: 700;
+  font-size: 1.1rem; color: var(--green);
+  white-space: nowrap;
+}
+.topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn {
+  padding: 9px 16px;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text);
+  font-family: 'Tajawal', sans-serif; font-size: 0.9rem;
+  cursor: pointer; transition: 0.2s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--green); color: var(--green); }
+.btn-primary {
+  background: var(--green); color: #000; border-color: var(--green);
+  font-weight: 700;
+}
+.btn-primary:hover { opacity: 0.88; color: #000; }
+.btn-danger { border-color: var(--red); }
+.btn-danger:hover { background: rgba(255,51,85,0.12); color: var(--red); }
+
+.main-layout {
+  display: flex; flex: 1;
+  min-height: 0;
+}
+
+/* ── SIDEBAR ────────────────────────────────────────────────── */
+#sidebar {
+  width: 260px; min-width: 200px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.sidebar-search {
+  padding: 12px;
+  position: sticky; top: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 2;
+}
+.sidebar-search-input {
+  width: 100%;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 9px 12px;
+  border-radius: 10px; font-family: 'Tajawal', sans-serif;
+  font-size: 0.88rem; outline: none; transition: 0.2s;
+}
+.sidebar-search-input:focus { border-color: var(--green); }
+.sidebar-search-input::placeholder { color: var(--muted); }
+
+.sidebar-section-label {
+  padding: 12px 14px 6px;
+  font-size: 0.72rem; color: var(--muted);
+  font-family: 'Cairo', sans-serif; font-weight: 700;
+  letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sidebar-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.sidebar-cat {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 14px;
+  cursor: pointer; transition: 0.15s;
+  border-right: 3px solid transparent;
+}
+.sidebar-cat:hover { background: var(--surface2); }
+.sidebar-cat.active {
+  background: rgba(0,255,136,0.07);
+  border-right-color: var(--green);
+}
+.sidebar-cat-emoji { font-size: 1.1rem; flex-shrink: 0; }
+.sidebar-cat-name {
+  font-size: 0.85rem; flex: 1; line-height: 1.3;
+  font-family: 'Cairo', sans-serif;
+}
+.sidebar-cat-count {
+  font-size: 0.75rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 2px 7px; border-radius: 20px; color: var(--muted);
+  flex-shrink: 0;
+}
+.sidebar-cat.active .sidebar-cat-count {
+  background: rgba(0,255,136,0.12);
+  border-color: rgba(0,255,136,0.3);
+  color: var(--green);
+}
+
+/* ── CONTENT ────────────────────────────────────────────────── */
+#content {
+  flex: 1; overflow-y: auto;
+  padding: 20px;
+  min-width: 0;
+}
+.content-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
+}
+.content-title {
+  font-family: 'Cairo', sans-serif; font-weight: 700;
+  font-size: 1.2rem;
+}
+.content-subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--muted);
+}
+.empty-state-icon { font-size: 3rem; margin-bottom: 14px; }
+.empty-state-text { font-size: 1rem; }
+
+/* ── QUESTION CARDS ─────────────────────────────────────────── */
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.q-card:hover { border-color: rgba(0,255,136,0.25); }
+.q-card-header {
+  display: flex; align-items: flex-start;
+  padding: 14px 16px; gap: 12px;
+}
+.q-num {
+  font-size: 0.72rem; color: var(--muted);
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 20px;
+  flex-shrink: 0; margin-top: 2px;
+  font-family: 'Cairo', sans-serif;
+}
+.q-content { flex: 1; min-width: 0; }
+.q-mode-badge {
+  font-size: 0.68rem; padding: 2px 8px;
+  border-radius: 20px; background: var(--surface2);
+  border: 1px solid var(--border); color: var(--muted);
+  flex-shrink: 0; align-self: flex-start;
+  font-family: 'Cairo', sans-serif;
+}
+.q-text { font-size: 0.95rem; line-height: 1.5; margin-bottom: 5px; }
+.q-answer { font-size: 0.85rem; color: var(--green); }
+.q-forbidden { font-size: 0.82rem; color: var(--red); }
+.q-hint { font-size: 0.82rem; color: var(--cyan); }
+.q-actions { display: flex; gap: 6px; margin-top: 8px; }
+.q-btn {
+  padding: 5px 12px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text);
+  font-size: 0.82rem; cursor: pointer; transition: 0.15s;
+}
+.q-btn:hover { border-color: var(--green); }
+.q-btn-del:hover { border-color: var(--red); color: var(--red); }
+
+/* ── INLINE EDIT FORM ───────────────────────────────────────── */
+.edit-form {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  display: none;
+}
+.edit-form.open { display: block; }
+.edit-row { margin-bottom: 10px; }
+.edit-label {
+  display: block; font-size: 0.8rem; color: var(--muted);
+  margin-bottom: 5px;
+}
+.edit-input, .edit-textarea, .edit-select {
+  width: 100%;
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); padding: 9px 12px;
+  border-radius: 10px; font-family: 'Tajawal', sans-serif;
+  font-size: 0.9rem; outline: none; transition: 0.2s;
+}
+.edit-input:focus, .edit-textarea:focus, .edit-select:focus {
+  border-color: var(--green);
+}
+.edit-textarea { resize: vertical; min-height: 60px; }
+.edit-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.edit-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.edit-actions { display: flex; gap: 8px; margin-top: 12px; }
+.edit-save {
+  background: var(--green); color: #000;
+  border: none; padding: 8px 20px;
+  border-radius: 10px; font-family: 'Cairo', sans-serif;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s;
+}
+.edit-save:hover { opacity: 0.88; }
+.edit-cancel {
+  background: none; color: var(--muted);
+  border: 1px solid var(--border); padding: 8px 16px;
+  border-radius: 10px; font-family: 'Tajawal', sans-serif;
+  font-size: 0.9rem; cursor: pointer; transition: 0.2s;
+}
+.edit-cancel:hover { border-color: var(--red); color: var(--red); }
+
+.file-upload-area {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg); border: 1px dashed var(--border);
+  border-radius: 10px; cursor: pointer; transition: 0.2s;
+}
+.file-upload-area:hover { border-color: var(--green); }
+.file-upload-area.has-file { border-color: var(--green); border-style: solid; }
+.file-upload-label { font-size: 0.85rem; color: var(--muted); cursor: pointer; flex: 1; }
+.file-upload-area.has-file .file-upload-label { color: var(--green); }
+.file-preview-img {
+  max-width: 100%; max-height: 120px;
+  border-radius: 8px; margin-top: 8px;
+  display: none;
+}
+.file-preview-audio {
+  width: 100%; margin-top: 8px;
+  display: none;
+}
+
+/* ── MODAL ──────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7);
+  display: none; align-items: flex-start; justify-content: center;
+  padding: 20px; overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%; max-width: 540px;
+  position: relative;
+  margin: auto;
+}
+.modal-title {
+  font-family: 'Cairo', sans-serif; font-weight: 700;
+  font-size: 1.15rem; margin-bottom: 20px;
+  color: var(--green);
+}
+.modal-close {
+  position: absolute; top: 16px; left: 16px;
+  background: none; border: none;
+  color: var(--muted); font-size: 1.4rem;
+  cursor: pointer; line-height: 1;
+}
+.modal-close:hover { color: var(--text); }
+.modal-row { margin-bottom: 14px; }
+.modal-label {
+  display: block; font-size: 0.83rem; color: var(--muted); margin-bottom: 6px;
+}
+.modal-input, .modal-select, .modal-textarea {
+  width: 100%;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 14px;
+  border-radius: 12px; font-family: 'Tajawal', sans-serif;
+  font-size: 0.95rem; outline: none; transition: 0.2s;
+}
+.modal-input:focus, .modal-select:focus, .modal-textarea:focus {
+  border-color: var(--green);
+}
+.modal-textarea { resize: vertical; min-height: 70px; }
+.modal-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.modal-submit {
+  flex: 1;
+  background: var(--green); color: #000;
+  border: none; padding: 13px;
+  font-family: 'Cairo', sans-serif; font-weight: 700;
+  font-size: 1rem; border-radius: 12px;
+  cursor: pointer; transition: 0.2s;
+}
+.modal-submit:hover { opacity: 0.88; }
+.modal-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── AI MODAL ───────────────────────────────────────────────── */
+.ai-modal-box { max-width: 600px; }
+.api-key-wrap { position: relative; margin-bottom: 14px; }
+.api-key-wrap .modal-input { padding-left: 80px; }
+.api-key-save-note { font-size: 0.75rem; color: var(--muted); margin-top: 5px; }
+.ai-success-banner {
+  display: none;
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.3);
+  border-radius: 12px; padding: 14px;
+  margin-top: 16px;
+  font-size: 0.9rem; color: var(--green);
+}
+.ai-gen-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #fff; border: none; padding: 14px;
+  font-family: 'Cairo', sans-serif; font-weight: 700;
+  font-size: 1rem; border-radius: 12px;
+  cursor: pointer; transition: 0.2s;
+  margin-top: 6px;
+}
+.ai-gen-btn:hover { opacity: 0.9; }
+.ai-gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── IMPORT hidden input ────────────────────────────────────── */
+#import-file-input { display: none; }
+
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  #sidebar { width: 200px; min-width: 160px; }
+  .sidebar-cat-name { font-size: 0.78rem; }
+  #content { padding: 14px; }
+  .modal-grid2, .modal-grid3, .edit-grid2, .edit-grid3 {
+    grid-template-columns: 1fr;
+  }
+  .topbar { padding: 10px 14px; }
+}
+@media (max-width: 480px) {
+  .main-layout { flex-direction: column; }
+  #sidebar {
+    width: 100%; max-height: 180px;
+    border-left: none; border-bottom: 1px solid var(--border);
+    overflow-x: hidden;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     LOGIN
+═════════════════════════════════════════════════════════════ -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">🛠️ أدمن</div>
+    <div class="login-sub">لوحة تحكم لعبة الجلسة</div>
+    <label class="login-label">كلمة المرور</label>
+    <input class="login-input" id="pw-input" type="password"
+      placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">دخول</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     ADMIN APP
+═════════════════════════════════════════════════════════════ -->
+<div id="admin-app">
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-title">🛠️ لوحة تحكم الجلسة</div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" onclick="openAddModal()">➕ سؤال جديد</button>
+      <button class="btn" onclick="openAIModal()">🤖 ولّد بالـ AI</button>
+      <button class="btn" onclick="exportJSON()">📥 تصدير JSON</button>
+      <button class="btn" onclick="document.getElementById('import-file-input').click()">📤 استيراد JSON</button>
+      <input type="file" id="import-file-input" accept=".json" onchange="importJSON(event)">
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main-layout">
+
+    <!-- Sidebar: Category List -->
+    <div id="sidebar">
+      <div class="sidebar-search">
+        <input class="sidebar-search-input" id="sidebar-search"
+          placeholder="🔍 ابحث في الفئات..."
+          oninput="renderSidebar()">
+      </div>
+      <div id="sidebar-list"></div>
+    </div>
+
+    <!-- Content: Questions -->
+    <div id="content">
+      <div class="empty-state" id="content-empty">
+        <div class="empty-state-icon">👈</div>
+        <div class="empty-state-text">اختر فئة من القائمة على اليمين</div>
+      </div>
+      <div id="content-questions" style="display:none">
+        <div class="content-header">
+          <div>
+            <div class="content-title" id="content-cat-title">—</div>
+            <div class="content-subtitle" id="content-cat-sub"></div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddModal()">➕ إضافة سؤال</button>
+        </div>
+        <div id="q-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     ADD QUESTION MODAL
+═════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal-box">
+    <div class="modal-title">➕ إضافة سؤال جديد</div>
+    <button class="modal-close" onclick="closeAddModal()">✕</button>
+
+    <div class="modal-row">
+      <label class="modal-label">الفئة</label>
+      <select class="modal-select" id="add-cat" onchange="updateAddFields()"></select>
+    </div>
+    <div class="modal-row">
+      <label class="modal-label">نوع السؤال (Mode)</label>
+      <select class="modal-select" id="add-mode" onchange="updateAddFields()">
+        <option value="qa">سؤال وجواب (qa)</option>
+        <option value="taboo">تابو (taboo)</option>
+        <option value="draw">ارسم وخمّن (draw)</option>
+        <option value="act">مثّل وخمّن (act)</option>
+        <option value="emoji">إيموجي (emoji)</option>
+        <option value="audio">صوتي (audio)</option>
+        <option value="visual">بصري (visual)</option>
+        <option value="alphabet">لعبة الحرف (alphabet)</option>
+      </select>
+    </div>
+
+    <div id="add-fields"></div>
+
+    <div class="modal-actions">
+      <button class="modal-submit" onclick="submitAdd()">✅ إضافة</button>
+      <button class="btn" onclick="closeAddModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     AI GENERATOR MODAL
+═════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="ai-modal">
+  <div class="modal-box ai-modal-box">
+    <div class="modal-title">🤖 مولّد الأسئلة بالـ AI</div>
+    <button class="modal-close" onclick="closeAIModal()">✕</button>
+
+    <div class="modal-row">
+      <label class="modal-label">مفتاح Anthropic API</label>
+      <input class="modal-input" id="ai-api-key" type="password"
+        placeholder="sk-ant-..." autocomplete="off">
+      <div class="api-key-save-note">يُحفظ تلقائياً في localStorage</div>
+    </div>
+
+    <div class="modal-grid2">
+      <div class="modal-row">
+        <label class="modal-label">الفئة</label>
+        <select class="modal-select" id="ai-cat"></select>
+      </div>
+      <div class="modal-row">
+        <label class="modal-label">النوع (Mode)</label>
+        <select class="modal-select" id="ai-mode">
+          <option value="qa">سؤال وجواب (qa)</option>
+          <option value="taboo">تابو</option>
+          <option value="draw">ارسم</option>
+          <option value="act">مثّل</option>
+          <option value="emoji">إيموجي</option>
+          <option value="audio">صوتي</option>
+          <option value="visual">بصري</option>
+          <option value="alphabet">الحرف</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-row">
+      <label class="modal-label">عدد الأسئلة</label>
+      <select class="modal-select" id="ai-count">
+        <option value="3">3</option>
+        <option value="5" selected>5</option>
+        <option value="8">8</option>
+        <option value="10">10</option>
+      </select>
+    </div>
+
+    <button class="ai-gen-btn" id="ai-gen-btn" onclick="runAIGenerate()">
+      ✨ ولّد وأضف الأسئلة
+    </button>
+
+    <div class="ai-success-banner" id="ai-success"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA — Copied from index.html
+// ============================================================
+const SECTIONS = {
+  tech:        { label: "⚡ سايبر وتقنية",         color: "#00ff88" },
+  gaming:      { label: "🎮 ألعاب وإسبورتس",       color: "#ff6b35" },
+  anime:       { label: "⛩️ أنمي",                  color: "#ff3366" },
+  movies:      { label: "🎬 أفلام ومسلسلات",        color: "#e05555" },
+  sports:      { label: "⚽ رياضة",                  color: "#4488ff" },
+  food:        { label: "🍕 طعام وثقافة",            color: "#ff9f1c" },
+  nostalgia:   { label: "📼 نوستالجيا",              color: "#9b5de5" },
+  music:       { label: "🎵 موسيقى",                 color: "#f72585" },
+  visual:      { label: "👁️ بصري وسمعي",            color: "#4cc9f0" },
+  interactive: { label: "🎲 ألعاب تفاعلية",          color: "#fb5607" },
+  general:     { label: "🌟 عام",                    color: "#06d6a0" }
+};
+
+const CATEGORIES = [
+  { id:"cyber_tools",  name:"أدوات اختبار الاختراق", emoji:"🛡️", section:"tech", defaultMode:"qa" },
+  { id:"ctf",          name:"تحديات CTF",             emoji:"🚩", section:"tech", defaultMode:"qa" },
+  { id:"networks",     name:"عالم الشبكات",           emoji:"🌐", section:"tech", defaultMode:"qa" },
+  { id:"cyber_certs",  name:"شهادات السايبر",         emoji:"📜", section:"tech", defaultMode:"qa" },
+  { id:"famous_hackers",name:"هاكرز مشهورين",         emoji:"👾", section:"tech", defaultMode:"qa" },
+  { id:"hardware",     name:"مكونات الهاردوير",       emoji:"💻", section:"tech", defaultMode:"qa" },
+  { id:"cloud",        name:"Cloud Computing",         emoji:"☁️", section:"tech", defaultMode:"qa" },
+  { id:"cyber_attacks",name:"هجمات سايبر مشهورة",    emoji:"💥", section:"tech", defaultMode:"qa" },
+  { id:"viruses",      name:"أنواع الفايروسات",       emoji:"🦠", section:"tech", defaultMode:"qa" },
+  { id:"encryption",   name:"خوارزميات التشفير",      emoji:"🔐", section:"tech", defaultMode:"qa" },
+  { id:"programming",  name:"لغات البرمجة",           emoji:"💾", section:"tech", defaultMode:"qa" },
+  { id:"sdlc",         name:"مراحل SDLC",             emoji:"🔄", section:"tech", defaultMode:"qa" },
+  { id:"social_eng",   name:"الهندسة الاجتماعية",    emoji:"🕵️", section:"tech", defaultMode:"qa" },
+  { id:"linux",        name:"Linux Command Line",      emoji:"🐧", section:"tech", defaultMode:"qa" },
+  { id:"ip_subnet",    name:"IP & Subnetting",         emoji:"📡", section:"tech", defaultMode:"qa" },
+  { id:"tech_startups",name:"Tech Startups & CEOs",    emoji:"🚀", section:"tech", defaultMode:"qa" },
+  { id:"rlcs",         name:"بطولات RLCS",            emoji:"🚗", section:"gaming", defaultMode:"qa" },
+  { id:"gaming_terms", name:"مصطلحات الجيمرز",       emoji:"🎮", section:"gaming", defaultMode:"qa" },
+  { id:"minecraft",    name:"Minecraft",               emoji:"⛏️", section:"gaming", defaultMode:"qa" },
+  { id:"gta",          name:"GTA Missions",            emoji:"🌆", section:"gaming", defaultMode:"qa" },
+  { id:"playstation",  name:"PlayStation Exclusives",  emoji:"🎯", section:"gaming", defaultMode:"qa" },
+  { id:"nintendo",     name:"Nintendo Characters",     emoji:"🍄", section:"gaming", defaultMode:"qa" },
+  { id:"esports_orgs", name:"منظمات E-Sports",        emoji:"🏆", section:"gaming", defaultMode:"qa" },
+  { id:"twitch",       name:"Twitch Streamers",        emoji:"💜", section:"gaming", defaultMode:"qa" },
+  { id:"game_sounds",  name:"موسيقى ألعاب",           emoji:"🎵", section:"gaming", defaultMode:"audio" },
+  { id:"fps_games",    name:"ألعاب FPS",              emoji:"🔫", section:"gaming", defaultMode:"qa" },
+  { id:"rl_mechanics", name:"ميكانيك Rocket League",  emoji:"⚡", section:"gaming", defaultMode:"qa" },
+  { id:"consoles",     name:"Video Game Consoles",     emoji:"🕹️", section:"gaming", defaultMode:"qa" },
+  { id:"anime_world",   name:"عالم الأنمي",           emoji:"⛩️", section:"anime", defaultMode:"qa" },
+  { id:"anime_quotes",  name:"اقتباسات الأنمي",       emoji:"💬", section:"anime", defaultMode:"qa" },
+  { id:"anime_hair",    name:"ألوان الشعر في الأنمي", emoji:"💇", section:"anime", defaultMode:"qa" },
+  { id:"anime_endings", name:"نهايات الأنمي",         emoji:"🎶", section:"anime", defaultMode:"audio" },
+  { id:"anime_villains",name:"شرار الأنمي",           emoji:"😈", section:"anime", defaultMode:"qa" },
+  { id:"sports_anime",  name:"أنمي الرياضة",          emoji:"⚽", section:"anime", defaultMode:"qa" },
+  { id:"isekai",        name:"Isekai Tropes",          emoji:"🌀", section:"anime", defaultMode:"qa" },
+  { id:"classic_anime", name:"أنمي قبل 2010",         emoji:"📼", section:"anime", defaultMode:"qa" },
+  { id:"spacetoon_shows",name:"كلاسيكيات سبيستون",   emoji:"🛸", section:"anime", defaultMode:"qa" },
+  { id:"anime_movies",  name:"أفلام الأنمي",          emoji:"🎬", section:"anime", defaultMode:"qa" },
+  { id:"shonen",        name:"أبطال Shonen",           emoji:"👊", section:"anime", defaultMode:"qa" },
+  { id:"anime_openings",name:"أوبننق الأنمي",         emoji:"🎤", section:"anime", defaultMode:"audio" },
+  { id:"anime_weapons", name:"أسلحة الأنمي",          emoji:"⚔️", section:"anime", defaultMode:"qa" },
+  { id:"netflix",       name:"Netflix Originals",     emoji:"📺", section:"movies", defaultMode:"qa" },
+  { id:"oscar_movies",  name:"أفلام الأوسكار",        emoji:"🏆", section:"movies", defaultMode:"qa" },
+  { id:"mcu",           name:"عالم مارفل MCU",        emoji:"🦸", section:"movies", defaultMode:"qa" },
+  { id:"comedy_plays",  name:"مسرحيات كوميدية",      emoji:"😂", section:"movies", defaultMode:"qa" },
+  { id:"horror_tropes", name:"كليشيهات الرعب",        emoji:"👻", section:"movies", defaultMode:"qa" },
+  { id:"movie_soundtracks",name:"موسيقى الأفلام",    emoji:"🎼", section:"movies", defaultMode:"audio" },
+  { id:"directors",     name:"مخرجون مشهورون",       emoji:"🎥", section:"movies", defaultMode:"qa" },
+  { id:"sitcoms_90s",   name:"مسلسلات التسعينات",    emoji:"🖥️", section:"movies", defaultMode:"qa" },
+  { id:"disney_princesses",name:"أميرات ديزني",      emoji:"👸", section:"movies", defaultMode:"qa" },
+  { id:"action_stars",  name:"نجوم أفلام الأكشن",   emoji:"💪", section:"movies", defaultMode:"qa" },
+  { id:"scifi",         name:"عوالم الخيال العلمي",  emoji:"🌌", section:"movies", defaultMode:"qa" },
+  { id:"arab_cinema",   name:"السينما العربية",      emoji:"🎦", section:"movies", defaultMode:"qa" },
+  { id:"movie_quotes",  name:"اقتباسات أفلام",       emoji:"🎭", section:"movies", defaultMode:"qa" },
+  { id:"highest_grossing",name:"أعلى أفلام إيراداً", emoji:"💰", section:"movies", defaultMode:"qa" },
+  { id:"zombie_movies", name:"أفلام الزومبي",        emoji:"🧟", section:"movies", defaultMode:"qa" },
+  { id:"plot_twists",   name:"Plot Twists مفاجئة",   emoji:"🔀", section:"movies", defaultMode:"qa" },
+  { id:"movie_villains",name:"شرار الأفلام",         emoji:"🦹", section:"movies", defaultMode:"qa" },
+  { id:"animated",      name:"الأفلام الكرتونية",   emoji:"🎨", section:"movies", defaultMode:"qa" },
+  { id:"disney_films",  name:"أفلام ديزني",          emoji:"🏰", section:"movies", defaultMode:"qa" },
+  { id:"egyptian_series",name:"مسلسلات مصرية",      emoji:"🎬", section:"movies", defaultMode:"qa" },
+  { id:"plays",         name:"المسرحيات",            emoji:"🎪", section:"movies", defaultMode:"qa" },
+  { id:"ucl",           name:"تاريخ دوري الأبطال",  emoji:"⭐", section:"sports", defaultMode:"qa" },
+  { id:"world_cup",     name:"تاريخ كأس العالم",    emoji:"🏆", section:"sports", defaultMode:"qa" },
+  { id:"street_soccer", name:"قواعد كرة الشارع",    emoji:"⚽", section:"sports", defaultMode:"qa" },
+  { id:"red_cards",     name:"بطاقات حمراء مشهورة", emoji:"🟥", section:"sports", defaultMode:"qa" },
+  { id:"olympic_obscure",name:"رياضات أولمبية نادرة",emoji:"🥇",section:"sports", defaultMode:"qa" },
+  { id:"tennis",        name:"Tennis Grand Slams",   emoji:"🎾", section:"sports", defaultMode:"qa" },
+  { id:"f1",            name:"F1 Tracks & Drivers",  emoji:"🏎️", section:"sports", defaultMode:"qa" },
+  { id:"football_managers",name:"مدربو كرة القدم",  emoji:"👔", section:"sports", defaultMode:"qa" },
+  { id:"sports_brands", name:"علامات الرياضة",      emoji:"👟", section:"sports", defaultMode:"qa" },
+  { id:"football_logos",name:"شعارات الأندية",      emoji:"🛡️", section:"sports", defaultMode:"visual" },
+  { id:"historic_goals",name:"أهداف تاريخية",       emoji:"⚽", section:"sports", defaultMode:"qa" },
+  { id:"ballon_dor",    name:"Ballon d'Or Winners",  emoji:"🏅", section:"sports", defaultMode:"qa" },
+  { id:"saudi_league",  name:"الدوري السعودي",      emoji:"🦅", section:"sports", defaultMode:"qa" },
+  { id:"junk_food",     name:"وجبات سريعة وشيبس",  emoji:"🍟", section:"food", defaultMode:"qa" },
+  { id:"soda",          name:"علامات المشروبات",    emoji:"🥤", section:"food", defaultMode:"qa" },
+  { id:"ice_cream",     name:"نكهات الآيس كريم",   emoji:"🍦", section:"food", defaultMode:"qa" },
+  { id:"baking",        name:"مكونات الخبز",        emoji:"🍞", section:"food", defaultMode:"qa" },
+  { id:"tropical_fruits",name:"فواكه استوائية",    emoji:"🍍", section:"food", defaultMode:"qa" },
+  { id:"chocolate",     name:"علامات الشوكولاتة",  emoji:"🍫", section:"food", defaultMode:"qa" },
+  { id:"saudi_food",    name:"الأكل السعودي",       emoji:"🍚", section:"food", defaultMode:"qa" },
+  { id:"fast_food_chains",name:"سلاسل الوجبات",    emoji:"🍔", section:"food", defaultMode:"qa" },
+  { id:"candy_90s",     name:"حلويات التسعينات",   emoji:"🍬", section:"food", defaultMode:"qa" },
+  { id:"cartoons_90s",  name:"كرتون التسعينات",    emoji:"📺", section:"nostalgia", defaultMode:"qa" },
+  { id:"spacetoon_planets",name:"كواكب سبيستون",  emoji:"🌍", section:"nostalgia", defaultMode:"qa" },
+  { id:"dialup",        name:"أصوات الإنترنت القديم",emoji:"📞",section:"nostalgia",defaultMode:"audio" },
+  { id:"old_ads",       name:"إعلانات قديمة",      emoji:"📢", section:"nostalgia", defaultMode:"qa" },
+  { id:"pop_2000s",     name:"أغاني البوب 2000s",  emoji:"🎵", section:"nostalgia", defaultMode:"audio" },
+  { id:"local_podcasts",name:"بودكاست محلي مشهور", emoji:"🎙️", section:"nostalgia", defaultMode:"qa" },
+  { id:"mbc3",          name:"MBC 3",               emoji:"📡", section:"nostalgia", defaultMode:"qa" },
+  { id:"gen_z",         name:"Gen Z Culture",       emoji:"📱", section:"nostalgia", defaultMode:"qa" },
+  { id:"arabic_songs",  name:"أغاني عربية",        emoji:"🎵", section:"music", defaultMode:"audio" },
+  { id:"foreign_songs", name:"أغاني أجنبية",       emoji:"🎸", section:"music", defaultMode:"audio" },
+  { id:"blurred_logos", name:"شعارات مضبّبة",     emoji:"👁️", section:"visual", defaultMode:"visual" },
+  { id:"tech_logos",    name:"شعارات شركات التقنية",emoji:"💻",section:"visual", defaultMode:"visual" },
+  { id:"airline_logos", name:"شعارات شركات الطيران",emoji:"✈️",section:"visual", defaultMode:"visual" },
+  { id:"car_brands",    name:"موديلات السيارات",   emoji:"🚗", section:"visual", defaultMode:"visual" },
+  { id:"animal_sounds", name:"أصوات الحيوانات",   emoji:"🐾", section:"visual", defaultMode:"audio" },
+  { id:"celebrity_voice",name:"صوت مشاهير",       emoji:"🎤", section:"visual", defaultMode:"audio" },
+  { id:"reversed_songs",name:"أغاني معكوسة",      emoji:"🔄", section:"visual", defaultMode:"audio" },
+  { id:"taboo_game",    name:"تابو",               emoji:"🚫", section:"interactive", defaultMode:"taboo" },
+  { id:"alphabet_game", name:"لعبة الحرف",         emoji:"🔤", section:"interactive", defaultMode:"alphabet" },
+  { id:"emoji_movies",  name:"خمّن الفيلم بالإيموجي",emoji:"🎬",section:"interactive", defaultMode:"emoji" },
+  { id:"draw_it",       name:"ارسم وخمّن",         emoji:"✏️", section:"interactive", defaultMode:"draw" },
+  { id:"act_it",        name:"مثّل وخمّن",         emoji:"🎭", section:"interactive", defaultMode:"act" },
+  { id:"guess_image",   name:"خمّن الصورة",        emoji:"🖼️", section:"interactive", defaultMode:"visual" },
+  { id:"movie_posters", name:"بوسترات أفلام",      emoji:"🎦", section:"interactive", defaultMode:"visual" },
+  { id:"general",       name:"أسئلة عامة",         emoji:"🌟", section:"general", defaultMode:"qa" },
+  { id:"geography",     name:"جغرافيا",            emoji:"🗺️", section:"general", defaultMode:"qa" },
+];
+
+let db = {"cyber_tools":[{"q":"في أداة Nmap، إيش هو الأمر لعمل Ping Sweep ومعرفة الأجهزة الشغالة؟","a":"-sn","mode":"qa"},{"q":"ما هي أشهر أداة لاختبار تطبيقات الويب وكشف الثغرات؟","a":"Burp Suite","mode":"qa"},{"q":"ما استخدام أداة Netcat؟","a":"إنشاء اتصالات TCP/UDP — تُسمى 'السكين السويسري' للشبكات","mode":"qa"},{"q":"ما الفرق بين Nmap و Masscan؟","a":"Masscan أسرع بكثير لكن Nmap أكثر دقة وميزات","mode":"qa"}],"ctf":[{"q":"ما هي تقنية إخفاء البيانات داخل الصور؟","a":"Steganography — إخفاء المعلومات","mode":"qa"},{"q":"في CTF، ما معنى ROT13؟","a":"تشفير يبدل كل حرف بالحرف الذي يبعد 13 مكاناً في الأبجدية","mode":"qa"},{"q":"ما هو الـ Base64 في تحديات CTF؟","a":"طريقة ترميز تحوّل البيانات الثنائية إلى نصوص ASCII — ليس تشفيراً حقيقياً","mode":"qa"}],"networks":[{"q":"ما رقم البورت الافتراضي لـ HTTPS؟","a":"443","mode":"qa"},{"q":"ما معنى DNS؟","a":"Domain Name System — يترجم أسماء النطاقات إلى عناوين IP","mode":"qa"},{"q":"ما الفرق بين TCP و UDP؟","a":"TCP موثوق ومتصل، UDP أسرع لكن بدون ضمان وصول","mode":"qa"}],"cyber_certs":[{"q":"في شهادة Security+، ما معنى AAA في السايبر؟","a":"Authentication, Authorization, Accounting","mode":"qa"},{"q":"ما الشركة التي تصدر شهادة eJPT؟","a":"eLearnSecurity (INE)","mode":"qa"}],"sdlc":[{"q":"في مرحلة التخطيط من دورة SDLC، إيش هو الهدف الأساسي؟","a":"تحديد المتطلبات ودراسة الجدوى (Feasibility Study)","mode":"qa"},{"q":"كم مرحلة في نموذج Waterfall؟","a":"6 مراحل: Requirements → Design → Implementation → Testing → Deployment → Maintenance","mode":"qa"}],"rlcs":[{"q":"ما الاختصار الكامل لبطولة RLCS؟","a":"Rocket League Championship Series","mode":"qa"},{"q":"كم منطقة رئيسية في بطولة RLCS؟","a":"3 مناطق: أمريكا الشمالية، أوروبا، والمحيط الهادي","mode":"qa"}],"rl_mechanics":[{"q":"ما اسم الحركة التي تسمح للاعب بالوصول لأقصى سرعة بأسرع وقت؟","a":"Speedflip","mode":"qa"},{"q":"ما الـ Wavedash في Rocket League؟","a":"حركة تجمع بين الـ Dodge والـ Landing لزيادة السرعة على الأرض","mode":"qa"},{"q":"ما الفرق بين Aerial و Ceiling Shot؟","a":"Aerial تُنفّذ في الهواء، أما Ceiling Shot فيبدأ من سقف الملعب","mode":"qa"}],"anime_world":[{"q":"ما الاستوديو الذي أنتج Spirited Away و Princess Mononoke؟","a":"Studio Ghibli","mode":"qa"},{"q":"كم حلقة في One Piece تقريباً حتى 2024؟","a":"أكثر من 1100 حلقة","mode":"qa"},{"q":"ما اسم أول أنمي أنتجته ufotable وحقق شهرة كبيرة؟","a":"Demon Slayer - Kimetsu no Yaiba","mode":"qa"}],"anime_quotes":[{"q":"من قال: I'll take a potato chip and EAT IT!","a":"Light Yagami — Death Note","mode":"qa"},{"q":"من قال: Plus Ultra!","a":"All Might — My Hero Academia","mode":"qa"},{"q":"من قال: I am the one who will surpass God!","a":"Frieza — Dragon Ball Z","mode":"qa"}],"taboo_game":[{"word":"الإنترنت","forbidden":["شبكة","اتصال","ويب"],"mode":"taboo"},{"word":"كرة القدم","forbidden":["ملعب","مرمى","كأس"],"mode":"taboo"},{"word":"الطائرة","forbidden":["سفر","مطار","طيران"],"mode":"taboo"},{"word":"ريال مدريد","forbidden":["إسبانيا","كرة","أبطال"],"mode":"taboo"},{"word":"الذكاء الاصطناعي","forbidden":["كمبيوتر","روبوت","برنامج"],"mode":"taboo"},{"word":"رمضان","forbidden":["صيام","إفطار","هلال"],"mode":"taboo"},{"word":"البيتزا","forbidden":["إيطاليا","جبن","أكل"],"mode":"taboo"},{"word":"ناروتو","forbidden":["أنمي","نينجا","راسينغان"],"mode":"taboo"}],"alphabet_game":[{"category":"حيوانات","mode":"alphabet"},{"category":"دول عربية","mode":"alphabet"},{"category":"أكل وشرب","mode":"alphabet"},{"category":"أفلام مشهورة","mode":"alphabet"},{"category":"رياضيون مشهورون","mode":"alphabet"},{"category":"تطبيقات الهاتف","mode":"alphabet"},{"category":"شخصيات أنمي","mode":"alphabet"},{"category":"مدن سعودية","mode":"alphabet"},{"category":"مشاهير يوتيوب","mode":"alphabet"},{"category":"ألعاب فيديو","mode":"alphabet"}],"emoji_movies":[{"q":"🦁👑🌍","a":"The Lion King — الأسد الملك","mode":"emoji"},{"q":"🕷️👦🏙️","a":"Spider-Man — سبايدرمان","mode":"emoji"},{"q":"🧊❄️👸","a":"Frozen — فروزن","mode":"emoji"},{"q":"🤖❤️🪴","a":"WALL-E","mode":"emoji"},{"q":"🧙‍♂️⚡📚🏰","a":"Harry Potter — هاري بوتر","mode":"emoji"},{"q":"🐟🐠🌊🔵","a":"Finding Nemo — بحثاً عن نيمو","mode":"emoji"},{"q":"🍕🐢🥋🗽","a":"Teenage Mutant Ninja Turtles","mode":"emoji"},{"q":"🦸‍♂️⚡🌩️","a":"Thor — ثور","mode":"emoji"},{"q":"👸💤🍎🤴","a":"Snow White — سنو وايت","mode":"emoji"}],"draw_it":[{"word":"تنين","hint":"مخلوق خيالي يطير ويتنفس نار","mode":"draw"},{"word":"برج إيفل","hint":"معلم سياحي في فرنسا","mode":"draw"},{"word":"بيتزا","hint":"أكل إيطالي شهير","mode":"draw"},{"word":"روبوت","hint":"آلة تشبه الإنسان","mode":"draw"},{"word":"كعكة عيد ميلاد","hint":"حلى مع شموع","mode":"draw"},{"word":"قرش","hint":"سمكة مفترسة ضخمة","mode":"draw"},{"word":"مظلة","hint":"تحمي من المطر","mode":"draw"},{"word":"شطرنج","hint":"لعبة على لوح مربعات سوداء وبيضاء","mode":"draw"}],"act_it":[{"word":"يسبح","hint":"رياضة مائية","mode":"act"},{"word":"يلعب تنس","hint":"مضرب وكرة صغيرة","mode":"act"},{"word":"يطبخ","hint":"يحضر الأكل في المطبخ","mode":"act"},{"word":"يقود سيارة","hint":"يمسك مقود","mode":"act"},{"word":"يلعب بالهاتف","hint":"تحديق في شاشة صغيرة","mode":"act"},{"word":"يرفع الأثقال","hint":"رياضة القوة في الجيم","mode":"act"},{"word":"يطير بطائرة","hint":"طيار في القمرة","mode":"act"},{"word":"يتسلق جبل","hint":"رياضة خارجية شاقة","mode":"act"}],"animal_sounds":[{"q":"🔊 المضيف يشغّل صوت حيوان - اقتراح: lion roar sound","a":"أسد","mode":"audio"},{"q":"🔊 المضيف يشغّل صوت حيوان - اقتراح: wolf howl sound","a":"ذئب","mode":"audio"},{"q":"🔊 المضيف يشغّل صوت حيوان - اقتراح: dolphin sound","a":"دولفين","mode":"audio"},{"q":"🔊 المضيف يشغّل صوت حيوان - اقتراح: elephant trumpet sound","a":"فيل","mode":"audio"}],"saudi_food":[{"q":"ما المكونات الأساسية للكبسة؟","a":"أرز، لحم أو دجاج، بهارات، طماطم، ماء","mode":"qa"},{"q":"ما الفرق بين السليق والكبسة؟","a":"السليق يُطبخ بالحليب ويكون أبيض، الكبسة بها بهارات ملونة","mode":"qa"},{"q":"من أي منطقة ينتمي طبق المطازيز؟","a":"منطقة نجد في وسط السعودية","mode":"qa"},{"q":"ما هو المفطح؟","a":"طبق أرز بالدجاج شهير في الحجاز","mode":"qa"}],"ucl":[{"q":"كم مرة فاز ريال مدريد بدوري أبطال أوروبا حتى 2024؟","a":"15 مرة — الأكثر في التاريخ","mode":"qa"},{"q":"من هو هداف دوري الأبطال التاريخي؟","a":"كريستيانو رونالدو","mode":"qa"},{"q":"في أي مدينة أُقيم نهائي دوري الأبطال 2024؟","a":"لندن — Wembley Stadium","mode":"qa"}],"world_cup":[{"q":"من فاز بكأس العالم 2022 في قطر؟","a":"الأرجنتين — بعد ضربات الترجيح ضد فرنسا","mode":"qa"},{"q":"كم مرة فازت البرازيل بكأس العالم؟","a":"5 مرات — الأكثر في التاريخ","mode":"qa"},{"q":"من سجل هدف الشرف للسعودية ضد الأرجنتين في 2022؟","a":"سلمان الفرج","mode":"qa"}],"street_soccer":[{"q":"في كرة الشارع، من يكون حارس المرمى إذا ما في متطوع؟","a":"آخر لاعب دافع عن المرمى، أو من سجّل ضده آخر هدف","mode":"qa"},{"q":"ما حكم الشينة في كرة الشارع؟","a":"ضربة حرة للفريق المتضرر","mode":"qa"}],"geography":[{"q":"ما عاصمة أستراليا؟","a":"كانبيرا — مش سيدني!","mode":"qa"},{"q":"ما هو أكبر بلد في العالم من حيث المساحة؟","a":"روسيا","mode":"qa"},{"q":"كم عدد دول العالم تقريباً؟","a":"195 دولة","mode":"qa"},{"q":"ما هو أطول نهر في العالم؟","a":"نهر النيل","mode":"qa"}],"general":[{"q":"كم عدد ألوان قوس قزح؟","a":"7 ألوان: أحمر، برتقالي، أصفر، أخضر، أزرق، نيلي، بنفسجي","mode":"qa"},{"q":"ما هو أسرع حيوان بري في العالم؟","a":"الفهد الصياد — يصل لـ 120 كم/ساعة","mode":"qa"},{"q":"كم ذراعاً لدى الأخطبوط؟","a":"8 أذرع","mode":"qa"}],"mcu":[{"q":"من هو الشرير الرئيسي في Avengers: Infinity War؟","a":"ثانوس (Thanos)","mode":"qa"},{"q":"ما هو أول فيلم في عالم مارفل الكوني؟","a":"Iron Man (2008)","mode":"qa"},{"q":"ما جملة توني ستارك الأشهر في آخر Avengers؟","a":"I am Iron Man","mode":"qa"}],"blurred_logos":[{"q":"تفاحة مقضومة — شركة تقنية أمريكية (المضيف يعرض الشعار)","a":"Apple","mode":"visual"},{"q":"M ذهبية على خلفية حمراء (المضيف يعرض الشعار)","a":"McDonald's","mode":"visual"},{"q":"علامة صح بسيطة (المضيف يعرض الشعار)","a":"Nike","mode":"visual"}],"reversed_songs":[{"q":"🔄 المضيف يشغّل أغنية بالعكس - اقتراح: Shape of You معكوسة","a":"Shape of You — Ed Sheeran","mode":"audio"},{"q":"🔄 المضيف يشغّل أغنية بالعكس - اقتراح: بقولك إيه معكوسة","a":"بقولك إيه — عمرو دياب","mode":"audio"}],"dialup":[{"q":"🔊 ما هذا الصوت؟ (المضيف يشغّل صوت الاتصال بالإنترنت 56K)","a":"صوت الاتصال بالإنترنت القديم 56K Dial-up Modem","mode":"audio"},{"q":"🔊 ما هذا الصوت؟ (المضيف يشغّل صوت ICQ)","a":"إشعار رسالة ICQ الشهير","mode":"audio"}],"arabic_songs":[{"q":"🎵 المضيف يشغّل - اقتراح: نور العين عمرو دياب","a":"نور العين — عمرو دياب","mode":"audio"},{"q":"🎵 المضيف يشغّل - اقتراح: تحب تعيش ماجد المهندس","a":"تحب تعيش — ماجد المهندس","mode":"audio"}],"foreign_songs":[{"q":"🎵 المضيف يشغّل - اقتراح: Bohemian Rhapsody","a":"Bohemian Rhapsody — Queen","mode":"audio"},{"q":"🎵 المضيف يشغّل - اقتراح: Blinding Lights","a":"Blinding Lights — The Weeknd","mode":"audio"}]};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentCatId = null;
+
+// ============================================================
+// LOGIN
+// ============================================================
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === 'jalsa2025') {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('admin-app').classList.add('visible');
+    init();
+  } else {
+    document.getElementById('login-err').textContent = 'كلمة المرور خاطئة';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  renderSidebar();
+  populateCategorySelects();
+  loadAPIKey();
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+function renderSidebar() {
+  const q = (document.getElementById('sidebar-search')?.value || '').toLowerCase();
+  const container = document.getElementById('sidebar-list');
+  let html = '';
+
+  const sections = Object.keys(SECTIONS);
+  sections.forEach(sectionId => {
+    const sec = SECTIONS[sectionId];
+    const cats = CATEGORIES.filter(c => c.section === sectionId &&
+      (!q || c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q)));
+    if (!cats.length) return;
+
+    html += `<div class="sidebar-section-label">${sec.label}</div>`;
+    cats.forEach(cat => {
+      const count = (db[cat.id] || []).length;
+      const isActive = cat.id === currentCatId;
+      html += `
+        <div class="sidebar-cat${isActive ? ' active' : ''}" onclick="selectCategory('${cat.id}')">
+          <span class="sidebar-cat-emoji">${cat.emoji}</span>
+          <span class="sidebar-cat-name">${cat.name}</span>
+          <span class="sidebar-cat-count">${count}</span>
+        </div>`;
+    });
+  });
+  container.innerHTML = html;
+}
+
+// ============================================================
+// SELECT CATEGORY
+// ============================================================
+function selectCategory(catId) {
+  currentCatId = catId;
+  renderSidebar();
+  renderQuestions();
+}
+
+// ============================================================
+// RENDER QUESTIONS
+// ============================================================
+function renderQuestions() {
+  const cat = CATEGORIES.find(c => c.id === currentCatId);
+  if (!cat) return;
+
+  document.getElementById('content-empty').style.display = 'none';
+  document.getElementById('content-questions').style.display = 'block';
+
+  const questions = db[currentCatId] || [];
+  document.getElementById('content-cat-title').textContent = `${cat.emoji} ${cat.name}`;
+  document.getElementById('content-cat-sub').textContent = `${questions.length} سؤال • وضع افتراضي: ${cat.defaultMode}`;
+
+  const list = document.getElementById('q-list');
+  if (!questions.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-text">لا توجد أسئلة في هذه الفئة بعد</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = questions.map((q, i) => buildQCard(q, i)).join('');
+}
+
+function buildQCard(q, idx) {
+  const mode = q.mode || 'qa';
+  const modeLabels = {qa:'سؤال وجواب',taboo:'تابو',draw:'ارسم',act:'مثّل',emoji:'إيموجي',audio:'صوتي',visual:'بصري',alphabet:'الحرف'};
+  let contentHtml = '';
+
+  if (mode === 'qa' || mode === 'emoji') {
+    contentHtml = `
+      <div class="q-text">${escHtml(q.q || '')}</div>
+      <div class="q-answer">✅ ${escHtml(q.a || '')}</div>`;
+  } else if (mode === 'taboo') {
+    contentHtml = `
+      <div class="q-text">🔤 ${escHtml(q.word || '')}</div>
+      <div class="q-forbidden">🚫 ${(q.forbidden||[]).map(escHtml).join(' • ')}</div>`;
+  } else if (mode === 'draw' || mode === 'act') {
+    contentHtml = `
+      <div class="q-text">${mode === 'draw' ? '✏️' : '🎭'} ${escHtml(q.word || '')}</div>
+      <div class="q-hint">💡 ${escHtml(q.hint || '')}</div>`;
+  } else if (mode === 'audio') {
+    contentHtml = `
+      <div class="q-text">🔊 ${escHtml(q.q || '')}</div>
+      <div class="q-answer">✅ ${escHtml(q.a || '')}</div>
+      ${q.audio ? `<audio class="file-preview-audio" style="display:block;width:100%;margin-top:8px" controls src="${q.audio}"></audio>` : ''}`;
+  } else if (mode === 'visual') {
+    contentHtml = `
+      <div class="q-text">🖼️ ${escHtml(q.q || '')}</div>
+      <div class="q-answer">✅ ${escHtml(q.a || '')}</div>
+      ${q.image ? `<img class="file-preview-img" style="display:block;max-width:100%;max-height:120px;border-radius:8px;margin-top:8px" src="${q.image}">` : ''}`;
+  } else if (mode === 'alphabet') {
+    contentHtml = `<div class="q-text">🔤 ${escHtml(q.category || '')}</div>`;
+  }
+
+  return `
+    <div class="q-card" id="qcard-${idx}">
+      <div class="q-card-header">
+        <span class="q-num">#${idx + 1}</span>
+        <div class="q-content">
+          ${contentHtml}
+          <div class="q-actions">
+            <button class="q-btn" onclick="toggleEdit(${idx})">✏️ تعديل</button>
+            <button class="q-btn q-btn-del" onclick="deleteQuestion(${idx})">🗑️ حذف</button>
+          </div>
+        </div>
+        <span class="q-mode-badge">${modeLabels[mode] || mode}</span>
+      </div>
+      <div class="edit-form" id="edit-form-${idx}">
+        ${buildEditForm(q, idx)}
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// EDIT FORM
+// ============================================================
+function toggleEdit(idx) {
+  const form = document.getElementById(`edit-form-${idx}`);
+  const isOpen = form.classList.contains('open');
+  // Close all others
+  document.querySelectorAll('.edit-form.open').forEach(f => f.classList.remove('open'));
+  if (!isOpen) form.classList.add('open');
+}
+
+function buildEditForm(q, idx) {
+  const mode = q.mode || 'qa';
+  let fields = '';
+
+  if (mode === 'qa') {
+    fields = `
+      <div class="edit-row">
+        <label class="edit-label">السؤال</label>
+        <textarea class="edit-textarea" id="ef-q-${idx}">${escHtml(q.q||'')}</textarea>
+      </div>
+      <div class="edit-row">
+        <label class="edit-label">الجواب</label>
+        <input class="edit-input" id="ef-a-${idx}" value="${escHtml(q.a||'')}">
+      </div>`;
+  } else if (mode === 'taboo') {
+    const f = q.forbidden || ['','',''];
+    fields = `
+      <div class="edit-row">
+        <label class="edit-label">الكلمة الرئيسية</label>
+        <input class="edit-input" id="ef-word-${idx}" value="${escHtml(q.word||'')}">
+      </div>
+      <div class="edit-grid3">
+        <div>
+          <label class="edit-label">محظور 1</label>
+          <input class="edit-input" id="ef-f0-${idx}" value="${escHtml(f[0]||'')}">
+        </div>
+        <div>
+          <label class="edit-label">محظور 2</label>
+          <input class="edit-input" id="ef-f1-${idx}" value="${escHtml(f[1]||'')}">
+        </div>
+        <div>
+          <label class="edit-label">محظور 3</label>
+          <input class="edit-input" id="ef-f2-${idx}" value="${escHtml(f[2]||'')}">
+        </div>
+      </div>`;
+  } else if (mode === 'draw' || mode === 'act') {
+    fields = `
+      <div class="edit-grid2">
+        <div>
+          <label class="edit-label">الكلمة</label>
+          <input class="edit-input" id="ef-word-${idx}" value="${escHtml(q.word||'')}">
+        </div>
+        <div>
+          <label class="edit-label">التلميح</label>
+          <input class="edit-input" id="ef-hint-${idx}" value="${escHtml(q.hint||'')}">
+        </div>
+      </div>`;
+  } else if (mode === 'emoji') {
+    fields = `
+      <div class="edit-grid2">
+        <div>
+          <label class="edit-label">سلسلة الإيموجي</label>
+          <input class="edit-input" id="ef-q-${idx}" value="${escHtml(q.q||'')}">
+        </div>
+        <div>
+          <label class="edit-label">الجواب</label>
+          <input class="edit-input" id="ef-a-${idx}" value="${escHtml(q.a||'')}">
+        </div>
+      </div>`;
+  } else if (mode === 'audio') {
+    fields = `
+      <div class="edit-row">
+        <label class="edit-label">وصف الكليب</label>
+        <textarea class="edit-textarea" id="ef-q-${idx}">${escHtml(q.q||'')}</textarea>
+      </div>
+      <div class="edit-row">
+        <label class="edit-label">الجواب</label>
+        <input class="edit-input" id="ef-a-${idx}" value="${escHtml(q.a||'')}">
+      </div>
+      <div class="edit-row">
+        <label class="edit-label">ملف صوتي (اختياري — يُخزّن كـ base64)</label>
+        <div class="file-upload-area${q.audio ? ' has-file' : ''}" onclick="document.getElementById('ef-audio-${idx}').click()">
+          <span>🎵</span>
+          <span class="file-upload-label" id="ef-audio-label-${idx}">${q.audio ? 'تم رفع ملف صوتي ✅' : 'اختر ملف صوتي...'}</span>
+        </div>
+        <input type="file" accept="audio/*" id="ef-audio-${idx}" style="display:none"
+          onchange="handleEditAudio(${idx}, this)">
+        ${q.audio ? `<audio style="width:100%;margin-top:8px" controls src="${q.audio}"></audio>` : ''}
+      </div>`;
+  } else if (mode === 'visual') {
+    fields = `
+      <div class="edit-row">
+        <label class="edit-label">وصف الصورة</label>
+        <textarea class="edit-textarea" id="ef-q-${idx}">${escHtml(q.q||'')}</textarea>
+      </div>
+      <div class="edit-row">
+        <label class="edit-label">الجواب</label>
+        <input class="edit-input" id="ef-a-${idx}" value="${escHtml(q.a||'')}">
+      </div>
+      <div class="edit-row">
+        <label class="edit-label">صورة (اختياري — تُخزّن كـ base64)</label>
+        <div class="file-upload-area${q.image ? ' has-file' : ''}" onclick="document.getElementById('ef-img-${idx}').click()">
+          <span>🖼️</span>
+          <span class="file-upload-label" id="ef-img-label-${idx}">${q.image ? 'تم رفع صورة ✅' : 'اختر صورة...'}</span>
+        </div>
+        <input type="file" accept="image/*" id="ef-img-${idx}" style="display:none"
+          onchange="handleEditImage(${idx}, this)">
+        ${q.image ? `<img style="max-width:100%;max-height:120px;border-radius:8px;margin-top:8px" src="${q.image}">` : ''}
+      </div>`;
+  } else if (mode === 'alphabet') {
+    fields = `
+      <div class="edit-row">
+        <label class="edit-label">الفئة</label>
+        <input class="edit-input" id="ef-cat-${idx}" value="${escHtml(q.category||'')}">
+      </div>`;
+  }
+
+  return `
+    ${fields}
+    <div class="edit-actions">
+      <button class="edit-save" onclick="saveEdit(${idx})">💾 حفظ</button>
+      <button class="edit-cancel" onclick="toggleEdit(${idx})">إلغاء</button>
+    </div>`;
+}
+
+function handleEditAudio(idx, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) { alert('الملف أكبر من 8MB'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    db[currentCatId][idx].audio = e.target.result;
+    document.getElementById(`ef-audio-label-${idx}`).textContent = 'تم رفع ملف صوتي ✅';
+    document.getElementById(`ef-audio-${idx}`).closest('.file-upload-area').classList.add('has-file');
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleEditImage(idx, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    db[currentCatId][idx].image = e.target.result;
+    document.getElementById(`ef-img-label-${idx}`).textContent = 'تم رفع صورة ✅';
+    document.getElementById(`ef-img-${idx}`).closest('.file-upload-area').classList.add('has-file');
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveEdit(idx) {
+  const q = db[currentCatId][idx];
+  const mode = q.mode || 'qa';
+  const g = id => document.getElementById(`${id}-${idx}`)?.value?.trim() || '';
+
+  if (mode === 'qa') {
+    q.q = g('ef-q');
+    q.a = g('ef-a');
+  } else if (mode === 'taboo') {
+    q.word = g('ef-word');
+    q.forbidden = [g('ef-f0'), g('ef-f1'), g('ef-f2')].filter(Boolean);
+  } else if (mode === 'draw' || mode === 'act') {
+    q.word = g('ef-word');
+    q.hint = g('ef-hint');
+  } else if (mode === 'emoji') {
+    q.q = g('ef-q');
+    q.a = g('ef-a');
+  } else if (mode === 'audio') {
+    q.q = g('ef-q');
+    q.a = g('ef-a');
+  } else if (mode === 'visual') {
+    q.q = g('ef-q');
+    q.a = g('ef-a');
+  } else if (mode === 'alphabet') {
+    q.category = g('ef-cat');
+  }
+
+  renderQuestions();
+  renderSidebar();
+  // Re-open at same position
+  setTimeout(() => document.getElementById(`edit-form-${idx}`)?.classList.add('open'), 10);
+}
+
+// ============================================================
+// DELETE
+// ============================================================
+function deleteQuestion(idx) {
+  const q = db[currentCatId][idx];
+  const label = q.q || q.word || q.category || `سؤال #${idx+1}`;
+  if (!confirm(`حذف "${label}"؟`)) return;
+  db[currentCatId].splice(idx, 1);
+  renderQuestions();
+  renderSidebar();
+}
+
+// ============================================================
+// ADD QUESTION MODAL
+// ============================================================
+function openAddModal() {
+  document.getElementById('add-modal').classList.add('open');
+  if (currentCatId) {
+    document.getElementById('add-cat').value = currentCatId;
+    const cat = CATEGORIES.find(c => c.id === currentCatId);
+    if (cat) document.getElementById('add-mode').value = cat.defaultMode;
+  }
+  updateAddFields();
+}
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('open');
+}
+
+function populateCategorySelects() {
+  const html = CATEGORIES.map(c => `<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('');
+  document.getElementById('add-cat').innerHTML = html;
+  document.getElementById('ai-cat').innerHTML = html;
+}
+
+function updateAddFields() {
+  const mode = document.getElementById('add-mode').value;
+  const container = document.getElementById('add-fields');
+  let html = '';
+
+  if (mode === 'qa') {
+    html = `
+      <div class="modal-row">
+        <label class="modal-label">السؤال</label>
+        <textarea class="modal-textarea" id="nf-q" placeholder="اكتب السؤال..."></textarea>
+      </div>
+      <div class="modal-row">
+        <label class="modal-label">الجواب</label>
+        <input class="modal-input" id="nf-a" placeholder="الجواب المختصر">
+      </div>`;
+  } else if (mode === 'taboo') {
+    html = `
+      <div class="modal-row">
+        <label class="modal-label">الكلمة الرئيسية</label>
+        <input class="modal-input" id="nf-word" placeholder="الكلمة">
+      </div>
+      <div class="modal-grid3">
+        <div>
+          <label class="modal-label">محظور 1</label>
+          <input class="modal-input" id="nf-f0" placeholder="كلمة">
+        </div>
+        <div>
+          <label class="modal-label">محظور 2</label>
+          <input class="modal-input" id="nf-f1" placeholder="كلمة">
+        </div>
+        <div>
+          <label class="modal-label">محظور 3</label>
+          <input class="modal-input" id="nf-f2" placeholder="كلمة">
+        </div>
+      </div>`;
+  } else if (mode === 'draw' || mode === 'act') {
+    html = `
+      <div class="modal-grid2">
+        <div>
+          <label class="modal-label">الكلمة</label>
+          <input class="modal-input" id="nf-word" placeholder="الكلمة للرسم/التمثيل">
+        </div>
+        <div>
+          <label class="modal-label">التلميح</label>
+          <input class="modal-input" id="nf-hint" placeholder="تلميح مختصر">
+        </div>
+      </div>`;
+  } else if (mode === 'emoji') {
+    html = `
+      <div class="modal-grid2">
+        <div>
+          <label class="modal-label">سلسلة الإيموجي</label>
+          <input class="modal-input" id="nf-q" placeholder="🎬🦁👑">
+        </div>
+        <div>
+          <label class="modal-label">الجواب</label>
+          <input class="modal-input" id="nf-a" placeholder="اسم الفيلم">
+        </div>
+      </div>`;
+  } else if (mode === 'audio') {
+    html = `
+      <div class="modal-row">
+        <label class="modal-label">وصف الكليب</label>
+        <textarea class="modal-textarea" id="nf-q" placeholder="مثال: أغنية X للفنان Y"></textarea>
+      </div>
+      <div class="modal-row">
+        <label class="modal-label">الجواب</label>
+        <input class="modal-input" id="nf-a" placeholder="الجواب الصحيح">
+      </div>
+      <div class="modal-row">
+        <label class="modal-label">ملف صوتي (اختياري)</label>
+        <div class="file-upload-area" id="nf-audio-area" onclick="document.getElementById('nf-audio-file').click()">
+          <span>🎵</span>
+          <span class="file-upload-label" id="nf-audio-label">اختر ملف صوتي...</span>
+        </div>
+        <input type="file" accept="audio/*" id="nf-audio-file" style="display:none" onchange="handleNewAudio(this)">
+      </div>`;
+  } else if (mode === 'visual') {
+    html = `
+      <div class="modal-row">
+        <label class="modal-label">وصف الصورة</label>
+        <textarea class="modal-textarea" id="nf-q" placeholder="مثال: شعار شركة X مضبّب"></textarea>
+      </div>
+      <div class="modal-row">
+        <label class="modal-label">الجواب</label>
+        <input class="modal-input" id="nf-a" placeholder="الجواب الصحيح">
+      </div>
+      <div class="modal-row">
+        <label class="modal-label">صورة (اختياري)</label>
+        <div class="file-upload-area" id="nf-img-area" onclick="document.getElementById('nf-img-file').click()">
+          <span>🖼️</span>
+          <span class="file-upload-label" id="nf-img-label">اختر صورة...</span>
+        </div>
+        <input type="file" accept="image/*" id="nf-img-file" style="display:none" onchange="handleNewImage(this)">
+        <img id="nf-img-preview" class="file-preview-img">
+      </div>`;
+  } else if (mode === 'alphabet') {
+    html = `
+      <div class="modal-row">
+        <label class="modal-label">الفئة</label>
+        <input class="modal-input" id="nf-cat" placeholder="مثال: حيوانات بحرية">
+      </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+// Temp storage for new question files
+let _newAudioBase64 = null;
+let _newImageBase64 = null;
+
+function handleNewAudio(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) { alert('الملف أكبر من 8MB'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _newAudioBase64 = e.target.result;
+    document.getElementById('nf-audio-label').textContent = `✅ ${file.name}`;
+    document.getElementById('nf-audio-area').classList.add('has-file');
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleNewImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _newImageBase64 = e.target.result;
+    document.getElementById('nf-img-label').textContent = `✅ ${file.name}`;
+    document.getElementById('nf-img-area').classList.add('has-file');
+    const preview = document.getElementById('nf-img-preview');
+    if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitAdd() {
+  const catId = document.getElementById('add-cat').value;
+  const mode = document.getElementById('add-mode').value;
+  const g = id => document.getElementById(id)?.value?.trim() || '';
+
+  let newQ = { mode };
+
+  if (mode === 'qa') {
+    if (!g('nf-q')) { alert('أدخل السؤال'); return; }
+    newQ.q = g('nf-q');
+    newQ.a = g('nf-a');
+  } else if (mode === 'taboo') {
+    if (!g('nf-word')) { alert('أدخل الكلمة الرئيسية'); return; }
+    newQ.word = g('nf-word');
+    newQ.forbidden = [g('nf-f0'), g('nf-f1'), g('nf-f2')].filter(Boolean);
+  } else if (mode === 'draw' || mode === 'act') {
+    if (!g('nf-word')) { alert('أدخل الكلمة'); return; }
+    newQ.word = g('nf-word');
+    newQ.hint = g('nf-hint');
+  } else if (mode === 'emoji') {
+    if (!g('nf-q')) { alert('أدخل الإيموجي'); return; }
+    newQ.q = g('nf-q');
+    newQ.a = g('nf-a');
+  } else if (mode === 'audio') {
+    newQ.q = g('nf-q');
+    newQ.a = g('nf-a');
+    if (_newAudioBase64) newQ.audio = _newAudioBase64;
+  } else if (mode === 'visual') {
+    newQ.q = g('nf-q');
+    newQ.a = g('nf-a');
+    if (_newImageBase64) newQ.image = _newImageBase64;
+  } else if (mode === 'alphabet') {
+    if (!g('nf-cat')) { alert('أدخل الفئة'); return; }
+    newQ.category = g('nf-cat');
+  }
+
+  if (!db[catId]) db[catId] = [];
+  db[catId].push(newQ);
+
+  _newAudioBase64 = null;
+  _newImageBase64 = null;
+
+  closeAddModal();
+
+  // Switch to the category and refresh
+  currentCatId = catId;
+  renderSidebar();
+  renderQuestions();
+}
+
+// ============================================================
+// AI GENERATOR
+// ============================================================
+function openAIModal() {
+  document.getElementById('ai-modal').classList.add('open');
+  if (currentCatId) document.getElementById('ai-cat').value = currentCatId;
+  document.getElementById('ai-success').style.display = 'none';
+}
+function closeAIModal() {
+  document.getElementById('ai-modal').classList.remove('open');
+}
+
+function loadAPIKey() {
+  const key = localStorage.getItem('anthropic_api_key') || '';
+  document.getElementById('ai-api-key').value = key;
+}
+
+function getModePrompt(mode, categoryName, count) {
+  const prompts = {
+    qa: `أنت مولّد أسئلة للعبة تريفيا باللغة العربية السعودية العامية. أنشئ ${count} أسئلة ممتعة وصعبة نوعاً ما لفئة "${categoryName}". أعطني فقط مصفوفة JSON بدون أي نص إضافي أو markdown. كل سؤال بهذا الشكل: {"q": "السؤال هنا", "a": "الجواب المختصر هنا", "mode": "qa"}`,
+    taboo: `أنشئ ${count} بطاقات لعبة تابو باللغة العربية لفئة "${categoryName}". أعطني فقط مصفوفة JSON. كل بطاقة: {"word": "الكلمة الرئيسية", "forbidden": ["كلمة1", "كلمة2", "كلمة3"], "mode": "taboo"}`,
+    emoji: `أنشئ ${count} أسئلة "خمّن الفيلم/المسلسل بالإيموجي" لفئة "${categoryName}". استخدم سلسلة من 2-5 إيموجي لتمثيل كل عمل. أعطني فقط مصفوفة JSON: {"q": "🎬🦁👑", "a": "اسم الفيلم بالعربي", "mode": "emoji"}`,
+    draw: `أنشئ ${count} كلمات للعبة "ارسم وخمّن" من فئة "${categoryName}". أعطني فقط مصفوفة JSON: {"word": "الكلمة للرسم", "hint": "تلميح مختصر", "mode": "draw"}`,
+    act: `أنشئ ${count} كلمات للعبة "مثّل وخمّن" (Charades) من فئة "${categoryName}". أعطني فقط مصفوفة JSON: {"word": "الكلمة للتمثيل", "hint": "تلميح مختصر", "mode": "act"}`,
+    alphabet: `أنشئ ${count} فئات متنوعة للعبة الحرف من مجال "${categoryName}". أعطني فقط مصفوفة JSON: {"category": "اسم الفئة", "mode": "alphabet"}`,
+    audio: `أنشئ ${count} أسئلة للعبة تخمين صوتية لفئة "${categoryName}". السؤال يصف ما يشغّله المضيف. أعطني فقط مصفوفة JSON: {"q": "وصف الكليب الصوتي (مثال: أغنية X للفنان Y)", "a": "الجواب الصحيح", "mode": "audio"}`,
+    visual: `أنشئ ${count} أسئلة للعبة تخمين بصري لفئة "${categoryName}". السؤال يصف ما يعرضه المضيف. أعطني فقط مصفوفة JSON: {"q": "وصف الصورة (مثال: شعار شركة X مضبّب)", "a": "الجواب الصحيح", "mode": "visual"}`,
+  };
+  return prompts[mode] || prompts.qa;
+}
+
+async function runAIGenerate() {
+  const apiKey = document.getElementById('ai-api-key').value.trim();
+  if (!apiKey) { alert('أدخل مفتاح Anthropic API أولاً'); return; }
+  localStorage.setItem('anthropic_api_key', apiKey);
+
+  const catId = document.getElementById('ai-cat').value;
+  const mode = document.getElementById('ai-mode').value;
+  const count = parseInt(document.getElementById('ai-count').value) || 5;
+  const catName = CATEGORIES.find(c => c.id === catId)?.name || catId;
+
+  const btn = document.getElementById('ai-gen-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جارٍ التوليد...';
+  document.getElementById('ai-success').style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: getModePrompt(mode, catName, count) }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    let text = data.content.map(b => b.text || '').join('');
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    const parsed = JSON.parse(text);
+    if (!Array.isArray(parsed)) throw new Error('الناتج ليس مصفوفة JSON صحيحة');
+
+    if (!db[catId]) db[catId] = [];
+    let added = 0;
+    parsed.forEach(q => {
+      const isDupe = db[catId].some(e =>
+        (e.q && e.q === q.q) || (e.word && e.word === q.word)
+      );
+      if (!isDupe) { db[catId].push(q); added++; }
+    });
+
+    const banner = document.getElementById('ai-success');
+    banner.textContent = `✅ تمت إضافة ${added} سؤال جديد إلى "${catName}". المجموع: ${db[catId].length}`;
+    banner.style.display = 'block';
+
+    // Refresh if viewing this category
+    if (currentCatId === catId) renderQuestions();
+    renderSidebar();
+
+  } catch(err) {
+    alert('خطأ: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ ولّد وأضف الأسئلة';
+  }
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function exportJSON() {
+  const json = JSON.stringify(db, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'questions.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+        alert('ملف JSON غير صحيح — يجب أن يكون object');
+        return;
+      }
+      db = parsed;
+      renderSidebar();
+      if (currentCatId) renderQuestions();
+      alert('✅ تم استيراد الملف بنجاح!');
+    } catch(err) {
+      alert('خطأ في قراءة الملف: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset so same file can be re-imported
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Close modals on overlay click
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
+});
+document.getElementById('ai-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAIModal();
+});
+</script>
+</body>
+</html>
